@@ -18,8 +18,10 @@ siteConfigs = {
         'name':'香书小说',
         'url':'https://www.ibiquges.info',
         'indexKey':'#list dd a',
+        'contentKey':'#content',
+        'titleKey':'.bookname h1',
+        'excludeKeys':['script','#content_tip','p'],
         }
-
 
 # Preparing of Requests
 ua = UserAgent()
@@ -30,6 +32,23 @@ headers = {
 
 bookId = '/5/5395/'
 indexPage = siteConfigs['url']+bookId
+
+def getSingle(url):
+    results = requests.get(url, headers=headers)
+    results.encoding='utf-8'
+    if(results.status_code==200):
+        doc = pq(results.text)
+        for k in siteConfigs['excludeKeys']:
+            doc(k).remove()
+        # Title
+        cprint(doc(siteConfigs['titleKey']).text(),'light_grey',attrs=['dark'])
+        # Content
+        print(doc(siteConfigs['contentKey']).text())
+    else:
+        cprint('读取'+url+'失败','light_red',attrs=['dark'])
+    return 0
+
+
 
 def fetchContent(start):
     cprint("开始获取正文,从第"+str(int(start+1))+"篇开始",'light_blue',attrs=['bold'])
@@ -43,14 +62,18 @@ def fetchContent(start):
     except:
             cprint("工作列表读取失败",'red',attrs=['bold'])
             return -1
-    with trange(len(ilist)) as t:
+    #with trange(len(ilist)) as t:
+    with trange(3) as t:
         for i in t:    
             t.set_description(colored('正在获取第 %i 篇' % i,"light_cyan"))
+            sleep(3)
+            getSingle(siteConfigs['url']+ilist[i]['url'])
             sleep(0.01)
         cprint("获取完成,共"+str(int(i+1))+"篇",'light_blue',attrs=['bold'])
     return 0 
 
 def parseIndex(url):
+    cprint("开始刷新目录",'light_blue',attrs=['bold'])
     ilist=[]
     results = requests.get(indexPage, headers=headers)
     results.encoding='utf-8'
