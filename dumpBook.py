@@ -1,4 +1,4 @@
-import subprocess
+import subprocess,os, glob
 import requests
 from pprint import pprint as ppt
 import html
@@ -19,29 +19,13 @@ import random
 
 import argparse
 
-# Debug Flag
-debugFlag = True
-debugSample = 10
-
-# Config Relavant
-siteConfigs = {
-        'name':'香书小说',
-        'url':'https://www.ibiquges.info',
-        'indexKey':'#list dd a',
-        'contentKey':'#content',
-        'titleKey':'.bookname h1',
-        'excludeKeys':['script','#content_tip','p'],
-        }
-
-# Preparing of Requests
-ua = UserAgent()
-random_user_agent = ua.random
-headers = {
-    "User-Agent": random_user_agent
-}
-
-def getSingle(url):
-    fId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10];
+from consolemenu import *
+from consolemenu.items import *
+from consolemenu.format import *
+from consolemenu.menu_component import Dimension
+from ui import EmptyBorderStyle
+def getSingle(url,ind):
+    fId = "%03d_%s"%(ind,hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10])
     results = requests.get(url, headers=headers)
     results.encoding='utf-8'
     if(results.status_code==200):
@@ -59,7 +43,7 @@ def getSingle(url):
 
         #pdb.set_trace()
         #ppt(dumpContent)
-        with open(r'working/'+wId+'/'+fId, 'w', encoding='utf8') as fp:
+        with open(r'working/'+wId+'/dumps/'+fId, 'w', encoding='utf8') as fp:
             json.dump(dumpContent,fp,ensure_ascii = False)
         return 0
     else:
@@ -96,6 +80,7 @@ def fetchContent(resume):
         glist = [item for item in ilist if item not in hlist]
     else:
         subprocess.run("rm -f working/"+wId+"/updatedList", shell=True, check=True)
+        subprocess.run("rm -f working/"+wId+"/dumps/*", shell=True, check=True)
         glist = ilist
         cprint("重新开始下载所有",'blue',attrs=['dark'])
 
@@ -111,12 +96,8 @@ def fetchContent(resume):
         for i in t:    
             res = 0
             if(debugFlag):
-                #res = random.choice([0,-1])
-                res = getSingle(siteConfigs['url']+glist[i]['url'])
-                sleep(5)
-            else:
-                res = getSingle(siteConfigs['url']+glist[i]['url'])
-            sleep(0.1)
+                res = getSingle(siteConfigs['url']+glist[i]['url'],i)
+            sleep(siteConfigs['fetchDelay'])
             if(res!=-1):
                 hlist.append(glist[i])
                 t.set_description(colored('获取第 %i 篇. 存入文件'%(i+1),'light_cyan',attrs=['dark']))
@@ -134,7 +115,7 @@ def fetchContent(resume):
 def parseIndex(url):
     cprint("开始刷新目录",'light_blue',attrs=['bold'])
     cprint("创建工作目录",'blue',attrs=['dark'])
-    subprocess.run("mkdir -p working/"+wId, shell=True, check=True)
+    subprocess.run("mkdir -p working/"+wId+"/dumps", shell=True, check=True)
     ilist=[]
     results = requests.get(indexPage, headers=headers)
     results.encoding='utf-8'
@@ -147,13 +128,16 @@ def parseIndex(url):
         doc = pq(results.text)
         blist = doc(siteConfigs['indexKey'])
         ilen = len(blist)
+
+        #to fetch cover picture
+
         if(debugFlag):
             ilen = debugSample
         for b in range(ilen):
             ilist.append({
                 'title':blist.eq(b).text(),
                 'url':blist.eq(b).attr('href'),
-                'fId':hashlib.sha1((siteConfigs['url']+blist.eq(b).attr('href')).encode("UTF-8")).hexdigest()[:10],
+                'fId':"%03d_%s"%(b,hashlib.sha1((siteConfigs['url']+blist.eq(b).attr('href')).encode("UTF-8")).hexdigest()[:10]),
             })
         # Create table cache
         try:
@@ -174,29 +158,67 @@ def parseIndex(url):
 
 if __name__=='__main__':
     global bookId, indexPage, wId
+
+    # Debug Flag
+    debugFlag = True
+    debugSample = 10
+    # Config Relavant
+    siteConfigs = {}
+
+
     # Initialization of parser
     parser = argparse.ArgumentParser()
-    
-    parser.add_argument("bookId", help="目录页ID")
+    parser.add_argument("bookId", help="目录页ID(指去掉网站根地址之后的部分，包括'/')")
     parser.add_argument("-n","--newindex", help="重新刷新目录", action="store_true")
     parser.add_argument("-r","--resume", help="继续未完成的任务", action="store_true")
-    
     args = parser.parse_args()
 
-    #bookId = '/5/5395/'
+    # use EmptyBorderType to "disable" borders until a proper enhancement is added to console-menu
+    menu_format = MenuFormatBuilder().set_border_style(EmptyBorderStyle())
+    menu = ConsoleMenu("网络小说电子书生成工具", "请选择站点", exit_option_text="退出")
+    menu.formatter = menu_format
+    def buildMenu(name):
+        if(name==''):
+            exit(0)
+        global siteConfigs
+        with open('configs/'+c) as f:
+            siteConfigs = json.load(f)
+    
+    for c in [_ for _ in os.listdir('configs') if _.endswith('json')]:
+        with open('configs/'+c) as f:
+            ccfg = json.load(f)
+        function_item = FunctionItem(ccfg['name'], buildMenu, [c.split('.')[0]], should_exit=True)
+        menu.append_item(function_item)
+    menu.show()
+
+    # For Menuexit
+    if(siteConfigs=={}):
+        cprint("取消操作",'grey',attrs=['bold'])
+        exit(0)
+    
+    # Preparing of Requests
+    ua = UserAgent()
+    random_user_agent = ua.random
+    headers = {
+        "User-Agent": random_user_agent
+    }
+
     bookId = args.bookId
     indexPage = siteConfigs['url']+bookId
     wId = hashlib.sha1(indexPage.encode("UTF-8")).hexdigest()[:10];
 
 
+    cprint("选择站点："+siteConfigs['name'] +".",'yellow',attrs=['bold'])
     # 目录处理
     if(args.newindex):
         cprint("重新刷新目录",'blue',attrs=['dark'])
-
-
         parseIndex(indexPage)
     else:
-        cprint("不刷新目录",'blue',attrs=['dark'])
+        if(os.path.exists('working/'+wId+'/workingList')):
+            cprint("不刷新目录",'blue',attrs=['dark'])
+        else:
+            cprint("工作列表不存在，重新刷新列表",'blue',attrs=['bold'])
+            parseIndex(indexPage)
     
     fetchContent(args.resume)
 

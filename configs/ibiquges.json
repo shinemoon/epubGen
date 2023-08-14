@@ -1,0 +1,10 @@
+{ 
+    "name":"香书小说",
+    "url":"https://www.ibiquges.info",
+    "indexKey":"#list dd a",
+    "contentKey":"#content",
+    "titleKey":".bookname h1",
+    "fetchDelay":2,
+    "fmimg":"#fmimg",
+    "excludeKeys":["script","#content_tip","p"]
+}
