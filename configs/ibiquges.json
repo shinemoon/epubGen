@@ -5,6 +5,6 @@
     "contentKey":"#content",
     "titleKey":".bookname h1",
     "fetchDelay":2,
-    "fmimg":"#fmimg",
+    "fmimg":"#fmimg img",
     "excludeKeys":["script","#content_tip","p"]
 }

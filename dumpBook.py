@@ -130,6 +130,18 @@ def parseIndex(url):
         ilen = len(blist)
 
         #to fetch cover picture
+        #try:
+        picurl = doc(siteConfigs['fmimg']).attr('src')
+        picraw = requests.get(picurl)
+        with open(r'working/'+wId+'/cover,jpg', 'wb') as f:
+            f.write(picraw.content)
+        #except:
+            # placeholder for default pic
+        #    pass
+
+
+
+        exit(0)
 
         if(debugFlag):
             ilen = debugSample
