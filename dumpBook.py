@@ -24,6 +24,10 @@ from consolemenu.items import *
 from consolemenu.format import *
 from consolemenu.menu_component import Dimension
 from ui import EmptyBorderStyle
+
+import genepub
+
+
 def getSingle(url,ind):
     fId = "%03d_%s"%(ind,hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10])
     results = requests.get(url, headers=headers)
@@ -36,14 +40,15 @@ def getSingle(url,ind):
             # Title
             'title':doc(siteConfigs['titleKey']).text(),
             # Content
-            'content':(doc(siteConfigs['contentKey']).text()),
+            #'content':(doc(siteConfigs['contentKey']).text()),
+            'content':(doc(siteConfigs['contentKey']).html()),
             # url
             'url':url,
         }
 
         #pdb.set_trace()
         #ppt(dumpContent)
-        with open(r'working/'+wId+'/dumps/'+fId, 'w', encoding='utf8') as fp:
+        with open(r'working/'+wId+'/dumps/'+fId +'.json', 'w', encoding='utf8') as fp:
             json.dump(dumpContent,fp,ensure_ascii = False)
         return 0
     else:
@@ -51,7 +56,7 @@ def getSingle(url,ind):
 
 
 
-def fetchContent(resume):
+def fetchContent(refresh):
     # Logged list
     hlist = []
     # Index List
@@ -67,7 +72,7 @@ def fetchContent(resume):
             cprint("工作列表读取失败",'red',attrs=['bold'])
             return -1
 
-    if(resume):
+    if(refresh==False):
         cprint("继续以前历史下载",'blue',attrs=['dark'])
         # Need to sort out worklist corss compare the workingList vs. updatedList
         try:
@@ -139,10 +144,6 @@ def parseIndex(url):
             # placeholder for default pic
             subprocess.run("cp -f cover.jpg working/"+wId+"/cover.jpg", shell=True, check=True)
 
-
-
-        exit(0)
-
         if(debugFlag):
             ilen = debugSample
         for b in range(ilen):
@@ -182,7 +183,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("bookId", help="目录页ID(指去掉网站根地址之后的部分，包括'/')")
     parser.add_argument("-n","--newindex", help="重新刷新目录", action="store_true")
-    parser.add_argument("-r","--resume", help="继续未完成的任务", action="store_true")
+    parser.add_argument("-r","--refresh", help="从头开始下载文章", action="store_true")
     args = parser.parse_args()
 
     # use EmptyBorderType to "disable" borders until a proper enhancement is added to console-menu
@@ -231,6 +232,8 @@ if __name__=='__main__':
         else:
             cprint("工作列表不存在，重新刷新列表",'blue',attrs=['bold'])
             parseIndex(indexPage)
-    
-    fetchContent(args.resume)
+    fetchContent(args.refresh)
+
+    # 生成Epub
+    genepub.genHtml('working/'+wId+'/dumps/')
 
