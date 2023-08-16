@@ -22,7 +22,7 @@
 
 `python dumpBook.py [-n] [-r] [BookID]
 
-![dumpBook]('readme.png')
+![readme.png](https://github.com/shinemoon/epubGen/blob/main/readme.png?raw=true)'
 
 ## 网站配置：
 
@@ -56,6 +56,7 @@
 -     "contentKey":"#content",                                  正文页中的正文内容选择
 -     "excludeKeys":["script","#content_tip","p"]               正文页中的排除元素（比如广告）
 -     "fetchDelay":2,                                           文章获取中的间隔时间（避免过快访问被ban）
+
 
 新的配置文件放置之后，脚本会自动识别并且需要用户选择对应站点开始操作。
 
