@@ -197,6 +197,7 @@ if __name__=='__main__':
     parser.add_argument("bookId", help="目录页ID(指去掉网站根地址之后的部分，包括'/')")
     parser.add_argument("-n","--newindex", help="重新刷新目录", action="store_true")
     parser.add_argument("-r","--refresh", help="从头开始下载文章", action="store_true")
+    parser.add_argument("-m","--mail", help="发送邮件,需要填入接受邮箱地址")
     args = parser.parse_args()
 
     # use EmptyBorderType to "disable" borders until a proper enhancement is added to console-menu
@@ -251,5 +252,13 @@ if __name__=='__main__':
     fetchContent(args.refresh)
 
     # 生成Epub
-    genEpubfromHtml('working/'+wId)
+    if(genEpubfromHtml('working/'+wId)==0):
+        # to check if mail needed:
+        if(args.mail):
+            cprint("生成完毕，发送邮件!",'green',attrs=['bold'])
+            # Reconstruct the sendmail bash
 
+            # excute the sendmail cmd
+            subprocess.run("",shell=True, check=True)
+        else:
+            cprint("生成完毕！",'green',attrs=['bold'])

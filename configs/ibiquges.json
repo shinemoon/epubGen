@@ -8,5 +8,6 @@
     "titleKey":".bookname h1",
     "fetchDelay":2,
     "fmimg":"#fmimg img",
-    "excludeKeys":["script","#content_tip","p"]
+    "excludeKeys":["script","#content_tip","p"],
+    "recmail":"shinemoon@foxmail.com"
 }

@@ -44,14 +44,17 @@ def genEpubfromHtml(fpath):
     genHtml(fpath+'/dumps/')
     # Got book info
     cinfo = {}
-    with open(fpath+'/bookinfo') as f:
-        cinfo  = json.load(f)
-    # Note
-    cprint("ebookmaker --make epub --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s.epub"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), 'green', attrs=['dark'])
-    subprocess.run("ebookmaker --make epub --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s.epub"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), shell=True, check=True)
-    cprint("生成ePub完成 (/working/%s/dumps/%s.epub)"%(fpath,cinfo['name']),'blue',attrs=['bold'])
-
-    return 0
+    try:
+        with open(fpath+'/bookinfo') as f:
+            cinfo  = json.load(f)
+        # Note
+        cprint("ebookmaker --make epub.images --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), 'green', attrs=['dark'])
+    #    subprocess.run("ebookmaker --make epub.images --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), shell=True, check=True)
+    #    subprocess.run("mv %s-images-epub.epub %s/%s.epub"%(fpath+"/dumps/"+cinfo['name'],fpath, cinfo['name']), shell=True, check=True)
+        cprint("生成ePub完成 (/%s/%s.epub)"%(fpath,cinfo['name']),'blue',attrs=['bold'])
+        return 0
+    except:
+        return -1
 
 if __name__=='__main__':
     pass
