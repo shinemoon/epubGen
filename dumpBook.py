@@ -195,10 +195,13 @@ if __name__=='__main__':
     # Initialization of parser
     parser = argparse.ArgumentParser()
     parser.add_argument("bookId", help="目录页ID(指去掉网站根地址之后的部分，包括'/')")
+    parser.add_argument("-c","--clean", help="清空工作目录,此指令与其他互斥", action="store_true")
     parser.add_argument("-n","--newindex", help="重新刷新目录", action="store_true")
     parser.add_argument("-r","--refresh", help="从头开始下载文章", action="store_true")
     parser.add_argument("-m","--mail", help="发送邮件,需要填入接受邮箱地址")
     args = parser.parse_args()
+
+
 
     # use EmptyBorderType to "disable" borders until a proper enhancement is added to console-menu
     menu_format = MenuFormatBuilder().set_border_style(EmptyBorderStyle())
@@ -221,6 +224,7 @@ if __name__=='__main__':
         menu.append_item(function_item)
     menu.show()
 
+
     # For Menuexit
     if(siteConfigs=={}):
         cprint("取消操作",'grey',attrs=['bold'])
@@ -236,6 +240,12 @@ if __name__=='__main__':
     bookId = args.bookId
     indexPage = siteConfigs['url']+bookId
     wId = hashlib.sha1(indexPage.encode("UTF-8")).hexdigest()[:10];
+
+    # Clean?
+    if(args.clean):
+        cprint("清空目录",'red',attrs=['dark'])
+        subprocess.run("rm -rf working/%s"%(wId),shell=True, check=True)
+        exit(0)
 
 
     cprint("选择站点："+siteConfigs['name'] +".",'yellow',attrs=['bold'])
