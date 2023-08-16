@@ -20,7 +20,7 @@
 
 进入epubGen的目录：
 
-`python dumpBook.py [-n] [-r] [BookID]
+`python dumpBook.py [-n] [-r] [BookID]`
 
 ![readme.png](https://github.com/shinemoon/epubGen/blob/main/readme.png?raw=true)'
 
@@ -46,16 +46,16 @@
 
 各域的定义如下：
 
--     "name":"香书小说",                                        网站名称
--     "url":"https://www.ibiquges.info",                        域名/地址
--     "indexKey":"#list dd a",                                  目录页中各章节的CSS选择
--     "bookName":"#info h1",                                    目录页中书名的CSS选择
--     "fmimg":"#fmimg img",                                     目录页中的封面选择
--     "authorName":"#info p:nth-child(2)",                      目录页中作者名的CSS选择
--     "titleKey":".bookname h1",                                正文页中的标题选择
--     "contentKey":"#content",                                  正文页中的正文内容选择
--     "excludeKeys":["script","#content_tip","p"]               正文页中的排除元素（比如广告）
--     "fetchDelay":2,                                           文章获取中的间隔时间（避免过快访问被ban）
+- "name":"香书小说",                                        网站名称
+- "url":"https://www.ibiquges.info",                        域名/地址
+- "indexKey":"#list dd a",                                  目录页中各章节的CSS选择
+- "bookName":"#info h1",                                    目录页中书名的CSS选择
+- "fmimg":"#fmimg img",                                     目录页中的封面选择
+- "authorName":"#info p:nth-child(2)",                      目录页中作者名的CSS选择
+- "titleKey":".bookname h1",                                正文页中的标题选择
+- "contentKey":"#content",                                  正文页中的正文内容选择
+- "excludeKeys":["script","#content_tip","p"]               正文页中的排除元素（比如广告）
+- "fetchDelay":2,                                           文章获取中的间隔时间（避免过快访问被ban）
 
 
 新的配置文件放置之后，脚本会自动识别并且需要用户选择对应站点开始操作。
