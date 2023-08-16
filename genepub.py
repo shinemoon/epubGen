@@ -49,7 +49,7 @@ def genEpubfromHtml(fpath):
     # Note
     cprint("ebookmaker --make epub --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s.epub"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), 'green', attrs=['dark'])
     subprocess.run("ebookmaker --make epub --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s.epub"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), shell=True, check=True)
-    cprint("生成ePub完成 (/working/%s/dumps/%s.epub)"%(fpath,cinfo['name'],'blue',attrs=['bold'])
+    cprint("生成ePub完成 (/working/%s/dumps/%s.epub)"%(fpath,cinfo['name']),'blue',attrs=['bold'])
 
     return 0
 
