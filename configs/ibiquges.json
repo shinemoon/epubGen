@@ -3,6 +3,8 @@
     "url":"https://www.ibiquges.info",
     "indexKey":"#list dd a",
     "contentKey":"#content",
+    "bookName":"#info h1",
+    "authorName":"#info p:nth-child(2)",
     "titleKey":".bookname h1",
     "fetchDelay":2,
     "fmimg":"#fmimg img",

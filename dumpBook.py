@@ -25,7 +25,7 @@ from consolemenu.format import *
 from consolemenu.menu_component import Dimension
 from ui import EmptyBorderStyle
 
-import genepub
+from genepub import genEpubfromHtml
 
 
 def getSingle(url,ind):
@@ -50,6 +50,7 @@ def getSingle(url,ind):
         #ppt(dumpContent)
         with open(r'working/'+wId+'/dumps/'+fId +'.json', 'w', encoding='utf8') as fp:
             json.dump(dumpContent,fp,ensure_ascii = False)
+            fp.flush()
         return 0
     else:
         return -1
@@ -100,8 +101,7 @@ def fetchContent(refresh):
         t.set_description(colored('开始获取','light_cyan',attrs=['dark']))
         for i in t:    
             res = 0
-            if(debugFlag):
-                res = getSingle(siteConfigs['url']+glist[i]['url'],i)
+            res = getSingle(siteConfigs['url']+glist[i]['url'],i)
             sleep(siteConfigs['fetchDelay'])
             if(res!=-1):
                 hlist.append(glist[i])
@@ -112,6 +112,7 @@ def fetchContent(refresh):
             try:
                 with open(r'working/'+wId+'/updatedList', 'w', encoding='utf8') as fp:
                     json.dump(hlist,fp,ensure_ascii = False)
+                    fp.flush()
             except:
                 cprint("工作列表刷新失败",'light_yellow',attrs=['dark'])
         cprint("获取完成,共"+str(listSize)+"篇，其中失败"+str(errCount)+"篇。",'light_blue',attrs=['bold'])
@@ -138,11 +139,22 @@ def parseIndex(url):
         try:
             picurl = doc(siteConfigs['fmimg']).attr('src')
             picraw = requests.get(picurl)
-            with open(r'working/'+wId+'/cover,jpg', 'wb') as f:
+            with open(r'working/'+wId+'/cover.jpg', 'wb') as f:
                 f.write(picraw.content)
+                f.flush()
         except:
             # placeholder for default pic
             subprocess.run("cp -f cover.jpg working/"+wId+"/cover.jpg", shell=True, check=True)
+
+        #pdb.set_trace()
+        # sort the book info
+        binfo = {
+                'name':doc(siteConfigs['bookName']).text(),
+                'author':doc(siteConfigs['authorName']).text()
+                }
+        with open(r'working/'+wId+'/bookinfo', 'w', encoding='utf8') as fp:
+            json.dump(binfo,fp,ensure_ascii = False)
+            fp.flush()
 
         if(debugFlag):
             ilen = debugSample
@@ -156,6 +168,7 @@ def parseIndex(url):
         try:
             with open(r'working/'+wId+'/workingList', 'w', encoding='utf8') as fp:
                 json.dump(ilist,fp,ensure_ascii = False)
+                fp.flush()
         except:
             cprint("工作列表创建失败列表完成",'red',attrs=['dark'])
             exit(1)
@@ -173,7 +186,7 @@ if __name__=='__main__':
     global bookId, indexPage, wId
 
     # Debug Flag
-    debugFlag = True
+    debugFlag = False
     debugSample = 10
     # Config Relavant
     siteConfigs = {}
@@ -188,7 +201,10 @@ if __name__=='__main__':
 
     # use EmptyBorderType to "disable" borders until a proper enhancement is added to console-menu
     menu_format = MenuFormatBuilder().set_border_style(EmptyBorderStyle())
-    menu = ConsoleMenu("网络小说电子书生成工具", "请选择站点", exit_option_text="退出")
+    m_desc = "网络小说电子书生成工具"
+    if(debugFlag):
+        m_desc = m_desc + "  [* Debug Mode ON]"
+    menu = ConsoleMenu(m_desc, "请选择站点", exit_option_text="退出")
     menu.formatter = menu_format
     def buildMenu(name):
         if(name==''):
@@ -235,5 +251,5 @@ if __name__=='__main__':
     fetchContent(args.refresh)
 
     # 生成Epub
-    genepub.genHtml('working/'+wId+'/dumps/')
+    genEpubfromHtml('working/'+wId)
 
