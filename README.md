@@ -22,16 +22,7 @@
 
 `python dumpBook.py [-n] [-r] [BookID]
 
-> 
-> usage: dumpBook.py [-h] [-n] [-r] bookId
->
-> positional arguments:
->  bookId          目录页ID(指去掉网站根地址之后的部分，包括'/')
->
-> optional arguments:
->  -h, --help      show this help message and exit
->  -n, --newindex  重新刷新目录
->  -r, --refresh   从头开始下载文章
+![dumpBook]('readme.png')
 
 ## 网站配置：
 
@@ -40,18 +31,18 @@
 请先复制想生成epub的书的目录页地址，同时确保对应该网站的配置文件正确放入了/configs/目录中，比如此例子中的配置文件 *ibiquges.json*
 
  
-> { 
->     "name":"香书小说",  
->     "url":"https://www.ibiquges.info",
->     "indexKey":"#list dd a",
->     "contentKey":"#content",
->     "bookName":"#info h1",
->     "authorName":"#info p:nth-child(2)",
->     "titleKey":".bookname h1",
->     "fetchDelay":2,
->     "fmimg":"#fmimg img",
->     "excludeKeys":["script","#content_tip","p"]
-> }
+> {     
+>     "name":"香书小说",       
+>     "url":"https://www.ibiquges.info",     
+>     "indexKey":"#list dd a",     
+>     "contentKey":"#content",     
+>     "bookName":"#info h1",     
+>     "authorName":"#info p:nth-child(2)",     
+>     "titleKey":".bookname h1",     
+>     "fetchDelay":2,     
+>     "fmimg":"#fmimg img",     
+>     "excludeKeys":["script","#content_tip","p"]     
+> }     
 
 各域的定义如下：
 
