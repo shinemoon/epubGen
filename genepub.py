@@ -10,51 +10,73 @@ from termcolor import colored, cprint
 
 
 def sortHtmlfromJson(fpath):
-    res = "<html lang='en'><head><meta charset='UTF-8'></head><body>"
     with open(fpath) as f:
         ccontent = json.load(f)
-    res = res + "<h2>" + ccontent['title']+ "</h2>" 
+
+    res = "<h1>" + ccontent['title']+ "</h1>" 
     res = res + "<div>" + ccontent['content']+ "</div>" 
-    res = res + "</body></html>"
-    return [res, ccontent['title']]
+    return [res, ccontent]
 
 def genHtml(fpath):
-    # IoC prepration
-    # Note
-    indres = "<html lang='en'><head><meta charset='UTF-8'></head><body>"
-    indres = indres + "<h2> 书籍目录 </h2>" 
-    # subprocess.run("", shell=True, check=True)
-
+    cfg={}
+    with open(fpath+'/../bookinfo') as f:
+        cfg = json.load(f)
+    # Page prepration
+    indres = "<html lang='zh'><head><meta charset='UTF-8'></head><body>"
     # Sorting all existed files
     for c in [_ for _ in sorted(os.listdir(fpath)) if _.endswith('json') ]:
         res = sortHtmlfromJson(fpath+c)
-        indres = indres + "<div class='index'><a href='"+c.split('.')[0]+".html'>"+ res[1] +"</a></div>"
-        with open(r'%s.html'%(fpath+c.split('.')[0]), 'w', encoding='utf8') as fp:
-            fp.write(res[0])
-            fp.flush()
+        indres = indres + res[0]
 
     indres = indres + "</body></html>"
-    with open(r'%s/index.html'%(fpath), 'w', encoding='utf8') as fp:
-        fp.write(indres)
+
+    
+    with open(r'%s/index.html'%(fpath), 'wb') as fp:
+        fp.write(HTMLBeautifier.beautify(indres, 4).encode('utf-8'))
         fp.flush()
+
     return 0
+
 
 def genEpubfromHtml(fpath):
     # Gen Html
     genHtml(fpath+'/dumps/')
+
+    # Consolidate the files:
+
+
     # Got book info
     cinfo = {}
     try:
         with open(fpath+'/bookinfo') as f:
             cinfo  = json.load(f)
         # Note
-        subprocess.run("",shell=True, check=True)
-        cprint("ebookmaker --make epub.images --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), 'green', attrs=['dark'])
-        subprocess.run("ebookmaker --make epub.images --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), shell=True, check=True)
-        subprocess.run("mv %s-images-epub.epub %s/%s.epub"%(fpath+"/dumps/"+cinfo['name'],fpath, cinfo['name']), shell=True, check=True)
+#        epubCmd = "ebook-convert %s/dumps/index.html %s/%s.epub \
+#        --authors='%s' \
+#        --level1-toc='//*[name()='h1' or name()='h1']' \
+#        --page-breaks-before='//*[(name()='h1' or name()='h1') or @class='owner-name']' \
+#        --use-auto-toc --toc-threshold=20 \
+#        --toc-title='书籍目录' \
+#        --max-levels=2 \
+#        --title='%s' \
+#        " % (fpath, fpath, cinfo['name'], cinfo['author'], cinfo['name'])
+        epubCmd = "ebook-convert %s/dumps/index.html %s/%s.epub \
+        --authors='%s' \
+        --level1-toc='//*[name()=\"h1\" or name()=\"h2\"]'\
+        --cover '%s/cover.jpg'\
+        --book-producer epubGen \
+        --language Chinese \
+        --pretty-print \
+        --max-levels=0 \
+        --title='%s' \
+        " % (fpath, fpath, cinfo['name'], cinfo['author'], fpath, cinfo['name'])
+
+        subprocess.run(epubCmd, shell=True, check=True)
         cprint("生成ePub完成 (/%s/%s.epub)"%(fpath,cinfo['name']),'blue',attrs=['bold'])
         return 0
-    except:
+    except Exception as e:
+        #cprint(repr(e),'grey',attrs=['dark'])
+        cprint("生成ePub失败 (/%s/%s.epub)"%(fpath,cinfo['name']),'red',attrs=['bold'])
         return -1
 
 if __name__=='__main__':

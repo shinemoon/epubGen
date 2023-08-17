@@ -29,26 +29,27 @@ from genepub import genEpubfromHtml
 
 
 def getSingle(url,ind):
-    fId = "%03d_%s"%(ind,hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10])
+    fId = "%03d_%s"%(ind,hashlib.sha1(url.encode("utf-8")).hexdigest()[:10])
     results = requests.get(url, headers=headers)
-    results.encoding='utf-8'
     if(results.status_code==200):
+        rencoding = results.encoding
+        results.encoding='utf-8'
         doc = pq(results.text)
         for k in siteConfigs['excludeKeys']:
             doc(k).remove()
+        tunedContent = doc(siteConfigs['contentKey']).html()
         dumpContent = {
             # Title
             'title':doc(siteConfigs['titleKey']).text(),
             # Content
-            #'content':(doc(siteConfigs['contentKey']).text()),
-            'content':(doc(siteConfigs['contentKey']).html()),
+            'content':tunedContent,
             # url
             'url':url,
         }
 
         #pdb.set_trace()
         #ppt(dumpContent)
-        with open(r'working/'+wId+'/dumps/'+fId +'.json', 'w', encoding='utf8') as fp:
+        with open(r'working/'+wId+'/dumps/'+fId +'.json', 'w') as fp:
             json.dump(dumpContent,fp,ensure_ascii = False)
             fp.flush()
         return 0
@@ -68,7 +69,7 @@ def fetchContent(refresh):
     # to log 'real' id of workinglist
     idlist = []
     try:
-        with open(r'working/'+wId+'/workingList', 'r', encoding='utf8') as fp:
+        with open(r'working/'+wId+'/workingList', 'r', encoding='utf-8') as fp:
             cprint("读取目录列表完成",'blue',attrs=['dark'])
             ilist = json.load(fp)
     except:
@@ -79,7 +80,7 @@ def fetchContent(refresh):
         cprint("继续以前历史下载",'blue',attrs=['dark'])
         # Need to sort out worklist corss compare the workingList vs. updatedList
         try:
-            with open(r'working/'+wId+'/updatedList', 'r', encoding='utf8') as fp:
+            with open(r'working/'+wId+'/updatedList', 'r', encoding='utf-8') as fp:
                 cprint("读取历史列表完成",'blue',attrs=['dark'])
                 hlist = json.load(fp)
         except:
@@ -117,7 +118,7 @@ def fetchContent(refresh):
                 errCount=errCount+1
                 t.set_description(colored("提取第%i篇失败"%i,'red',attrs=['bold']));
             try:
-                with open(r'working/'+wId+'/updatedList', 'w', encoding='utf8') as fp:
+                with open(r'working/'+wId+'/updatedList', 'w', encoding='utf-8') as fp:
                     json.dump(hlist,fp,ensure_ascii = False)
                     fp.flush()
             except:
@@ -131,8 +132,9 @@ def parseIndex(url):
     subprocess.run("mkdir -p working/"+wId+"/dumps", shell=True, check=True)
     ilist=[]
     results = requests.get(indexPage, headers=headers)
-    results.encoding='utf-8'
     if(results.status_code==200):
+        rencoding = results.encoding
+        results.encoding = 'utf-8'
         # Try just print
         #content = html.escape(results.text)
         #print(HTMLBeautifier.beautify(content, 4))
@@ -159,7 +161,7 @@ def parseIndex(url):
                 'name':doc(siteConfigs['bookName']).text(),
                 'author':doc(siteConfigs['authorName']).text()
                 }
-        with open(r'working/'+wId+'/bookinfo', 'w', encoding='utf8') as fp:
+        with open(r'working/'+wId+'/bookinfo', 'w', encoding='utf-8') as fp:
             json.dump(binfo,fp,ensure_ascii = False)
             fp.flush()
 
@@ -173,7 +175,7 @@ def parseIndex(url):
             })
         # Create table cache
         try:
-            with open(r'working/'+wId+'/workingList', 'w', encoding='utf8') as fp:
+            with open(r'working/'+wId+'/workingList', 'w', encoding='utf-8') as fp:
                 json.dump(ilist,fp,ensure_ascii = False)
                 fp.flush()
         except:
@@ -194,7 +196,7 @@ if __name__=='__main__':
 
     # Debug Flag
     debugFlag = True
-    debugSample = 10
+    debugSample = 8 
     # Config Relavant
     siteConfigs = {}
 

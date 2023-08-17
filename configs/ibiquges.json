@@ -6,7 +6,7 @@
     "bookName":"#info h1",
     "authorName":"#info p:nth-child(2)",
     "titleKey":".bookname h1",
-    "fetchDelay":2,
+    "fetchDelay":5,
     "fmimg":"#fmimg img",
     "excludeKeys":["script","#content_tip","p"],
     "recmail":"shinemoon@foxmail.com"
