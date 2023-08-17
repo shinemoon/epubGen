@@ -13,7 +13,7 @@ def sortHtmlfromJson(fpath):
     res = "<html lang='en'><head><meta charset='UTF-8'></head><body>"
     with open(fpath) as f:
         ccontent = json.load(f)
-    res = res + "<h1>" + ccontent['title']+ "</h1>" 
+    res = res + "<h2>" + ccontent['title']+ "</h2>" 
     res = res + "<div>" + ccontent['content']+ "</div>" 
     res = res + "</body></html>"
     return [res, ccontent['title']]
@@ -22,7 +22,7 @@ def genHtml(fpath):
     # IoC prepration
     # Note
     indres = "<html lang='en'><head><meta charset='UTF-8'></head><body>"
-    indres = indres + "<h1> 书籍目录 </h1>" 
+    indres = indres + "<h2> 书籍目录 </h2>" 
     # subprocess.run("", shell=True, check=True)
 
     # Sorting all existed files
@@ -48,6 +48,7 @@ def genEpubfromHtml(fpath):
         with open(fpath+'/bookinfo') as f:
             cinfo  = json.load(f)
         # Note
+        subprocess.run("",shell=True, check=True)
         cprint("ebookmaker --make epub.images --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), 'green', attrs=['dark'])
         subprocess.run("ebookmaker --make epub.images --cover '%s/cover.jpg' --title '%s' --author '%s' --max-depth 2 %s/dumps/index.html --output-file %s"%(fpath, cinfo['name'], cinfo['author'],fpath,fpath+"/dumps/"+cinfo['name']), shell=True, check=True)
         subprocess.run("mv %s-images-epub.epub %s/%s.epub"%(fpath+"/dumps/"+cinfo['name'],fpath, cinfo['name']), shell=True, check=True)
