@@ -65,6 +65,8 @@ def fetchContent(refresh):
 
     # Gap List
     glist = []
+    # to log 'real' id of workinglist
+    idlist = []
     try:
         with open(r'working/'+wId+'/workingList', 'r', encoding='utf8') as fp:
             cprint("读取目录列表完成",'blue',attrs=['dark'])
@@ -83,11 +85,16 @@ def fetchContent(refresh):
         except:
                 cprint("工作列表读取失败",'red',attrs=['bold'])
                 return -1
-        glist = [item for item in ilist if item not in hlist]
+        for i in range(len(ilist)):
+            if ilist[i] not in hlist:
+                glist.append(ilist[i])
+                idlist.append(i)
+
     else:
         subprocess.run("rm -f working/"+wId+"/updatedList", shell=True, check=True)
         subprocess.run("rm -f working/"+wId+"/dumps/*", shell=True, check=True)
         glist = ilist
+        idlist = [i for i in range(len(ilist))]
         cprint("重新开始下载所有",'blue',attrs=['dark'])
 
     cprint("开始获取正文",'light_blue',attrs=['bold'])
@@ -101,7 +108,7 @@ def fetchContent(refresh):
         t.set_description(colored('开始获取','light_cyan',attrs=['dark']))
         for i in t:    
             res = 0
-            res = getSingle(siteConfigs['url']+glist[i]['url'],i)
+            res = getSingle(siteConfigs['url']+glist[i]['url'],idlist[i])
             sleep(siteConfigs['fetchDelay'])
             if(res!=-1):
                 hlist.append(glist[i])
@@ -186,7 +193,7 @@ if __name__=='__main__':
     global bookId, indexPage, wId
 
     # Debug Flag
-    debugFlag = False
+    debugFlag = True
     debugSample = 10
     # Config Relavant
     siteConfigs = {}
