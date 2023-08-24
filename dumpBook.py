@@ -83,14 +83,13 @@ def fetchContent(refresh):
             with open(r'working/'+wId+'/updatedList', 'r', encoding='utf-8') as fp:
                 cprint("读取历史列表完成",'blue',attrs=['dark'])
                 hlist = json.load(fp)
+                for i in range(len(ilist)):
+                    if ilist[i] not in hlist:
+                        glist.append(ilist[i])
+                        idlist.append(i)
         except:
-                cprint("工作列表读取失败",'red',attrs=['bold'])
-                return -1
-        for i in range(len(ilist)):
-            if ilist[i] not in hlist:
-                glist.append(ilist[i])
-                idlist.append(i)
-
+                cprint("历史列表读取失败,请重新建立",'red',attrs=['bold'])
+                return fetchContent(True)
     else:
         subprocess.run("rm -f working/"+wId+"/updatedList", shell=True, check=True)
         subprocess.run("rm -f working/"+wId+"/dumps/*", shell=True, check=True)
@@ -195,11 +194,10 @@ if __name__=='__main__':
     global bookId, indexPage, wId
 
     # Debug Flag
-    debugFlag = True
+    debugFlag = False
     debugSample = 8 
     # Config Relavant
     siteConfigs = {}
-
 
     # Initialization of parser
     parser = argparse.ArgumentParser()
@@ -207,7 +205,7 @@ if __name__=='__main__':
     parser.add_argument("-c","--clean", help="清空工作目录,此指令与其他互斥", action="store_true")
     parser.add_argument("-n","--newindex", help="重新刷新目录", action="store_true")
     parser.add_argument("-r","--refresh", help="从头开始下载文章", action="store_true")
-    parser.add_argument("-m","--mail", help="发送邮件,需要填入接受邮箱地址")
+    parser.add_argument("-m","--mail", help="发送邮件,需要在配置文件填入接受邮箱地址",action="store_true")
     args = parser.parse_args()
 
 
@@ -270,14 +268,19 @@ if __name__=='__main__':
             parseIndex(indexPage)
     fetchContent(args.refresh)
 
+    binfo = {}
     # 生成Epub
+    with open(r'working/'+wId+'/bookinfo', 'r', encoding='utf-8') as fp:
+        binfo = json.load(fp)
+
     if(genEpubfromHtml('working/'+wId)==0):
         # to check if mail needed:
         if(args.mail):
             cprint("生成完毕，发送邮件!",'green',attrs=['bold'])
             # Reconstruct the sendmail bash
-
+            mailcmd = "./send-mail.sh %s %s %s"%(siteConfigs['recmail'],'working/'+wId+'/'+binfo['name']+'.epub',binfo['name'])
             # excute the sendmail cmd
-            subprocess.run("",shell=True, check=True)
+            cprint(mailcmd,'green',attrs=['dark'])
+            subprocess.run(mailcmd,shell=True, check=True)
         else:
             cprint("生成完毕！",'green',attrs=['bold'])

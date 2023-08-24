@@ -15,6 +15,8 @@
 
 - 请直接Clone本仓库，然后根据requirement.txt确保依赖条件满足 （推荐使用virtualenv）
 - [需要安装Calibre](https://www.linuxcapable.com/how-to-install-calibre-on-ubuntu-linux/)
+- 如果需要自动发送信箱功能，请确认配置文件中正确填入了收信地址，以及安装了[sendmail](https://developer.aliyun.com/article/712611), 并且为'send-mail.sh'添加了权限,例如：`chmod +x ./send-mail.sh`
+
 
 
 
@@ -43,7 +45,8 @@
 >     "titleKey":".bookname h1",     
 >     "fetchDelay":2,     
 >     "fmimg":"#fmimg img",     
->     "excludeKeys":["script","#content_tip","p"]     
+>     "excludeKeys":["script","#content_tip","p"],    
+>     "recmail":"xyz@hojo.com"    
 > }     
 
 各域的定义如下：
@@ -58,6 +61,7 @@
 - "contentKey":"#content",                                  正文页中的正文内容选择
 - "excludeKeys":["script","#content_tip","p"]               正文页中的排除元素（比如广告）
 - "fetchDelay":2,                                           文章获取中的间隔时间（避免过快访问被ban）
+- "recmail":"xyz@hojo.com",                                 启用发送邮件功能时，接收邮箱的地址
 
 
 新的配置文件放置之后，脚本会自动识别并且需要用户选择对应站点开始操作。

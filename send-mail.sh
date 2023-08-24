@@ -1,9 +1,8 @@
 #!/bin/bash
-SUBJECT="[epubGen]电子书生成完毕"
+SUBJECT="[epubGen]电子书生成完毕 $3"
 MAILFROM="noreply@`hostname -f`"
-MAILTO="shinemoon@foxmail.com"
-#ATTACHMENT="working/dcb74152c0/凡人修仙传.epub"
-ATTACHMENT="tags"
+MAILTO="$1"
+ATTACHMENT="$2"
 MAILPART=`uuidgen` ## Generates Unique ID as boundary
 MAILPART_BODY=`uuidgen` ## Generates Unique ID as boundary
 

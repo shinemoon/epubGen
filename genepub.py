@@ -13,7 +13,7 @@ def sortHtmlfromJson(fpath):
     with open(fpath) as f:
         ccontent = json.load(f)
 
-    res = "<h1>" + ccontent['title']+ "</h1>" 
+    res = "<h1 style='font-size:1.1em'>" + ccontent['title']+ "</h1>" 
     res = res + "<div>" + ccontent['content']+ "</div>" 
     return [res, ccontent]
 
