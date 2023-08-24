@@ -18,11 +18,11 @@ MAILPART_BODY=`uuidgen` ## Generates Unique ID as boundary
  echo ""
  echo "--$MAILPART_BODY"
  echo "Content-Type: text/plain; charset=UTF-8"
- echo "This is TEXT part and below is HTML part"
+ echo "ePub文件已经生成：$3.epub"
  echo "--$MAILPART_BODY"
  echo "Content-Type: text/html; charset=UTF-8"
  echo ""
- echo "<html><body><div>THIS IS HTML PART</div></body></html>"
+ echo "<html><body><div>ePub文件已经生成: $3.epub</div></body></html>"
  echo "--$MAILPART_BODY--"
 
  echo "--$MAILPART"
