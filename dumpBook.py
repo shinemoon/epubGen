@@ -152,7 +152,8 @@ def parseIndex(url):
                 f.flush()
         except:
             # placeholder for default pic
-            subprocess.run("cp -f cover.jpg working/"+wId+"/cover.jpg", shell=True, check=True)
+            cprint("无封面图片，采用自动生成",'red',attrs=['dark'])
+            #subprocess.run("cp -f cover.jpg working/"+wId+"/cover.jpg", shell=True, check=True)
 
         #pdb.set_trace()
         # sort the book info
