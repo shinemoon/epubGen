@@ -75,7 +75,7 @@ def genEpubfromHtml(fpath):
         if(os.path.exists("%s/cover.jpg"%(fpath))):
             epubCmd = epubCmd + "--cover %s/cover.jpg "%(fpath)
 
-        cprint(epubCmd,'white',attrs=['dark'])
+        #cprint(epubCmd,'white',attrs=['dark'])
         subprocess.run(epubCmd, shell=True, check=True)
         cprint("生成ePub完成 (/%s/%s.epub)"%(fpath,cinfo['name']),'blue',attrs=['bold'])
         return 0
