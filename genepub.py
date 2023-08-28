@@ -71,10 +71,14 @@ def genCover(fpath,cfg, binfo):
         cwidth = basewidth -  rawwidth
         cheight = rawheight
         sizeStr = str(cwidth)+"x"+str(cheight)
+        print(binfo)
         
         mkcover = mkcover + "cp "+fpath+"/rawcover.jpg tmp/cover.jpg;"
         mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.6)' -draw 'rectangle 0,%d %d,%d' cover%s.jpg tmp/bgcover.jpg;"%((baseheight-rawheight)/2,basewidth,(baseheight+rawheight)/2,randCover)
         mkcover = mkcover + "convert -gravity east -kerning 15 -font title.ttf -fill '#EEEEEE' -pointsize 100 -annotate +%d+0 '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%(40,binfo['name'])
+        mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.8)' -draw 'rectangle 0,%d %d,%d' tmp/bgcover.jpg tmp/bgcover.jpg;"%((baseheight/2+rawheight/2+100),basewidth,(baseheight/2+rawheight/2+200))
+        mkcover = mkcover + "convert -gravity west -fill 'lightblue' -kerning 5 -font title.ttf -pointsize 60 -annotate +40+%d '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%((rawheight/2+150) ,binfo['author'])
+        mkcover = mkcover + "convert -gravity southeast -fill '#555555' -kerning 2 -pointsize 30 -annotate +20+10 '@epubGen' tmp/bgcover.jpg tmp/bgcover.jpg;"
         mkcover = mkcover + "composite -gravity west tmp/cover.jpg tmp/bgcover.jpg "+fpath+"/cover.jpg;"
         print(mkcover)
         subprocess.run(mkcover, shell=True, check=True)
@@ -93,8 +97,6 @@ def genEpubfromHtml(fpath,cfg):
 
         # Gen Cover
         genCover(fpath,cfg,cinfo)
-
-
 
         epubCmd = "ebook-convert %s/dumps/index.html %s/%s.epub \
         --authors='%s' \

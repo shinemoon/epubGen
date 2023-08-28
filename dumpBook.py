@@ -49,7 +49,6 @@ def getSingle(url,ind):
             'url':url,
         }
 
-        #pdb.set_trace()
         #ppt(dumpContent)
         with open(r'working/'+wId+'/dumps/'+fId +'.json', 'w') as fp:
             json.dump(dumpContent,fp,ensure_ascii = False)
@@ -154,6 +153,7 @@ def parseIndex(url):
         except Exception as e:
             cprint(repr(e),'white',attrs=['dark'])
             # placeholder for default pic
+            subprocess.run("cp cover.jpg working/%s/rawcover.jpg"%(wId),shell=True, check=True)
             cprint("无封面图片，采用自动生成",'red',attrs=['dark'])
         # sort the book info
         binfo = {
