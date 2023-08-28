@@ -29,6 +29,12 @@ from genepub import genEpubfromHtml
 
 from url_normalize import url_normalize
 
+from urllib.parse import urlparse
+
+def is_absolute_url(url):
+    parsed_url = urlparse(url)
+    return bool(parsed_url.scheme)
+
 
 def getSingle(url,ind):
     fId = "%03d_%s"%(ind,hashlib.sha1(url.encode("utf-8")).hexdigest()[:10])
@@ -109,7 +115,14 @@ def fetchContent(refresh):
         t.set_description(colored('开始获取','light_cyan',attrs=['dark']))
         for i in t:    
             res = 0
-            res = getSingle(siteConfigs['url']+glist[i]['url'],idlist[i])
+            singleUrl = glist[i]['url']
+            global indexPage
+
+            if(is_absolute_url(singleUrl)):
+                res = getSingle(siteConfigs['url']+glist[i]['url'],idlist[i])
+            else:
+                res = getSingle(indexPage+glist[i]['url'],idlist[i])
+
             sleep(siteConfigs['fetchDelay'])
             if(res!=-1):
                 hlist.append(glist[i])
@@ -204,6 +217,7 @@ if __name__=='__main__':
     parser.add_argument("-c","--clean", help="清空工作目录,此指令与其他互斥", action="store_true")
     parser.add_argument("-n","--newindex", help="重新刷新目录", action="store_true")
     parser.add_argument("-r","--refresh", help="从头开始下载文章", action="store_true")
+    parser.add_argument("-t","--toc", help="令目录可见", action="store_true")
     parser.add_argument("-m","--mail", help="发送邮件,需要在配置文件填入接受邮箱地址",action="store_true")
     args = parser.parse_args()
 

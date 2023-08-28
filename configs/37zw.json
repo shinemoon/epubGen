@@ -1,0 +1,14 @@
+{ 
+    "name":"三七中文",
+    "url":"https://www.37zw.la",
+    "indexKey":"li.book-item a",
+    "contentKey":"#content",
+    "bookName":".info .top h1",
+    "authorName":".info .top p:first",
+    "titleKey":".bookname h1",
+    "fetchDelay":2,
+    "fmimg":".detail-box .imgbox img",
+    "fmtype":"refine",
+    "excludeKeys":[],
+    "recmail":"shinemoon@foxmail.com"
+}

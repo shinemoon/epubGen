@@ -8,7 +8,7 @@
     "titleKey":"h1:nth-child(2)",
     "fetchDelay":2,
     "fmimg":".book-cover img",
-    "fmtype":"default",
+    "fmtype":"refine",
     "excludeKeys":[],
     "recmail":"shinemoon@foxmail.com"
 }

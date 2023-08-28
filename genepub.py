@@ -1,8 +1,7 @@
 import subprocess,os, glob
 from pprint import pprint as ppt
 import html
-from html5print import HTMLBeautifier
-
+from html5print import HTMLBeautifier 
 import pdb
 import json
 
@@ -59,6 +58,9 @@ def genCover(fpath,cfg, binfo):
     mkcover = ""
     # Check Type of Cover:
     if(('fmtype' not in cfg.keys()) or cfg['fmtype']=='default'):
+        # Directly use the raw cover
+        subprocess.run("cp "+fpath+"/rawcover.jpg "+fpath+"/cover.jpg;", shell =True, check=True)
+    elif(cfg['fmtype']=='refine'):
         # Composite
         randCover = random.choice(['A','B','C'])
         ## Base cover:
@@ -73,7 +75,7 @@ def genCover(fpath,cfg, binfo):
         sizeStr = str(cwidth)+"x"+str(cheight)
         print(binfo)
         
-        mkcover = mkcover + "cp "+fpath+"/rawcover.jpg tmp/cover.jpg;"
+        mkcover = mkcover + "convert -resize 300 "+fpath+"/rawcover.jpg tmp/cover.jpg;"
         mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.6)' -draw 'rectangle 0,%d %d,%d' cover%s.jpg tmp/bgcover.jpg;"%((baseheight-rawheight)/2,basewidth,(baseheight+rawheight)/2,randCover)
         mkcover = mkcover + "convert -gravity east -kerning 15 -font title.ttf -fill '#EEEEEE' -pointsize 100 -annotate +%d+0 '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%(40,binfo['name'])
         mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.8)' -draw 'rectangle 0,%d %d,%d' tmp/bgcover.jpg tmp/bgcover.jpg;"%((baseheight/2+rawheight/2+100),basewidth,(baseheight/2+rawheight/2+200))
@@ -108,7 +110,9 @@ def genEpubfromHtml(fpath,cfg):
         --output-profile tablet \
         --max-levels=0 \
         --title='%s' \
-        " % (fpath, fpath, cinfo['name'], cinfo['author'], cinfo['name'])
+        --epub-inline-toc \
+        --toc-title %s \
+        " % (fpath, fpath, cinfo['name'], cinfo['author'], cinfo['name'],cinfo['name'])
 
         if(os.path.exists("%s/cover.jpg"%(fpath))):
             epubCmd = epubCmd + "--cover %s/cover.jpg "%(fpath)
