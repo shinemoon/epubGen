@@ -148,23 +148,13 @@ def parseIndex(url):
         try:
             picurl = url_normalize(doc(siteConfigs['fmimg']).attr('src'))
             picraw = requests.get(picurl)
-            with open(r'working/'+wId+'/cover.jpg', 'wb') as f:
+            with open(r'working/'+wId+'/rawcover.jpg', 'wb') as f:
                 f.write(picraw.content)
                 f.flush()
-#            mkcover = ""
-            # Emboss?
-#            mkcover = mkcover + "gm convert -border 3x3 -bordercolor 'rgba(100,100,100,0.01)' working/"+wId+"/rawcover.jpg tmp/cover.jpg;"
-            # Composite
-#            randCover = random.choice(['A','B','C'])
-#            mkcover = mkcover + "gm composite -gravity center tmp/cover.jpg cover"+randCover+".jpg working/"+wId+"/cover.jpg;rm -rf tmp/*;"
-#            subprocess.run(mkcover, shell=True, check=True)
         except Exception as e:
             cprint(repr(e),'white',attrs=['dark'])
             # placeholder for default pic
             cprint("无封面图片，采用自动生成",'red',attrs=['dark'])
-            #subprocess.run("cp -f cover.jpg working/"+wId+"/cover.jpg", shell=True, check=True)
-
-        #pdb.set_trace()
         # sort the book info
         binfo = {
                 'name':doc(siteConfigs['bookName']).text(),
@@ -286,7 +276,7 @@ if __name__=='__main__':
         cprint("未能成功读取目录页面",'red')
         exit(1)
 
-    if(genEpubfromHtml('working/'+wId)==0):
+    if(genEpubfromHtml('working/'+wId, siteConfigs)==0):
         # to check if mail needed:
         if(args.mail):
             cprint("生成完毕，发送邮件!",'green',attrs=['bold'])

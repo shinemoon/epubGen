@@ -8,6 +8,8 @@ import json
 
 from termcolor import colored, cprint
 
+import random
+
 
 def sortHtmlfromJson(fpath):
     with open(fpath) as f:
@@ -39,28 +41,28 @@ def genHtml(fpath):
     return 0
 
 
-def genEpubfromHtml(fpath):
+def genEpubfromHtml(fpath,cfg):
     # Gen Html
     genHtml(fpath+'/dumps/')
 
-    # Consolidate the files:
+    # Prepare cover
+    mkcover = ""
 
+    # Check Type of Cover:
+    if(('fmtype' not in cfg.keys()) or cfg['fmtype']=='default'):
+        # Emboss?
+        mkcover = mkcover + "gm convert -border 3x3 -bordercolor 'rgba(100,100,100,0.01)' "+fpath+"/rawcover.jpg tmp/cover.jpg;"
+        # Composite
+        randCover = random.choice(['A','B','C'])
+        mkcover = mkcover + "gm composite -gravity southwest  tmp/cover.jpg cover"+randCover+".jpg "+fpath+"/cover.jpg;rm -rf tmp/*;"
+        print(mkcover)
+        subprocess.run(mkcover, shell=True, check=True)
 
     # Got book info
     cinfo = {}
     try:
         with open(fpath+'/bookinfo') as f:
             cinfo  = json.load(f)
-        # Note
-#        epubCmd = "ebook-convert %s/dumps/index.html %s/%s.epub \
-#        --authors='%s' \
-#        --level1-toc='//*[name()='h1' or name()='h1']' \
-#        --page-breaks-before='//*[(name()='h1' or name()='h1') or @class='owner-name']' \
-#        --use-auto-toc --toc-threshold=20 \
-#        --toc-title='书籍目录' \
-#        --max-levels=2 \
-#        --title='%s' \
-#        " % (fpath, fpath, cinfo['name'], cinfo['author'], cinfo['name'])
         epubCmd = "ebook-convert %s/dumps/index.html %s/%s.epub \
         --authors='%s' \
         --level1-toc='//*[name()=\"h1\" or name()=\"h2\"]'\
@@ -68,6 +70,7 @@ def genEpubfromHtml(fpath):
         --book-producer epubGen \
         --language Chinese \
         --pretty-print \
+        --output-profile tablet \
         --max-levels=0 \
         --title='%s' \
         " % (fpath, fpath, cinfo['name'], cinfo['author'], cinfo['name'])
