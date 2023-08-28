@@ -1,0 +1,13 @@
+{ 
+    "name":"潇湘书院",
+    "url":"https://www.xxsy.net",
+    "indexKey":".profile-main ul li a",
+    "contentKey":"#content",
+    "bookName":".title h1",
+    "authorName":".title a:nth-child(2)",
+    "titleKey":"h1:nth-child(1)",
+    "fetchDelay":2,
+    "fmimg":".book-cover img",
+    "excludeKeys":[],
+    "recmail":"shinemoon@foxmail.com"
+}

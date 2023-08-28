@@ -27,6 +27,8 @@ from ui import EmptyBorderStyle
 
 from genepub import genEpubfromHtml
 
+from url_normalize import url_normalize
+
 
 def getSingle(url,ind):
     fId = "%03d_%s"%(ind,hashlib.sha1(url.encode("utf-8")).hexdigest()[:10])
@@ -135,8 +137,7 @@ def parseIndex(url):
         rencoding = results.encoding
         results.encoding = 'utf-8'
         # Try just print
-        #content = html.escape(results.text)
-        #print(HTMLBeautifier.beautify(content, 4))
+        content = html.escape(results.text)
     
         # pyQuery
         doc = pq(results.text)
@@ -145,7 +146,7 @@ def parseIndex(url):
 
         #to fetch cover picture
         try:
-            picurl = doc(siteConfigs['fmimg']).attr('src')
+            picurl = url_normalize(doc(siteConfigs['fmimg']).attr('src'))
             picraw = requests.get(picurl)
             with open(r'working/'+wId+'/cover.jpg', 'wb') as f:
                 f.write(picraw.content)
@@ -191,8 +192,7 @@ def parseIndex(url):
             exit(1)
         return 0 
     else:
-        print("Failed to get valid page!")
-        return -1
+        exit(1)
 
 
 # Refresh Working List
@@ -203,7 +203,7 @@ if __name__=='__main__':
     global bookId, indexPage, wId
 
     # Debug Flag
-    debugFlag = False
+    debugFlag = True
     debugSample = 8 
     # Config Relavant
     siteConfigs = {}
@@ -230,7 +230,7 @@ if __name__=='__main__':
         if(name==''):
             exit(0)
         global siteConfigs
-        with open('configs/'+c) as f:
+        with open('configs/'+name+'.json') as f:
             siteConfigs = json.load(f)
     
     for c in [_ for _ in os.listdir('configs') if _.endswith('json')]:
@@ -238,6 +238,7 @@ if __name__=='__main__':
             ccfg = json.load(f)
         function_item = FunctionItem(ccfg['name'], buildMenu, [c.split('.')[0]], should_exit=True)
         menu.append_item(function_item)
+
     menu.show()
 
 
@@ -252,7 +253,6 @@ if __name__=='__main__':
     headers = {
         "User-Agent": random_user_agent
     }
-
     bookId = args.bookId
     indexPage = siteConfigs['url']+bookId
     wId = hashlib.sha1(indexPage.encode("UTF-8")).hexdigest()[:10];
@@ -279,8 +279,12 @@ if __name__=='__main__':
 
     binfo = {}
     # 生成Epub
-    with open(r'working/'+wId+'/bookinfo', 'r', encoding='utf-8') as fp:
-        binfo = json.load(fp)
+    try:
+        with open(r'working/'+wId+'/bookinfo', 'r', encoding='utf-8') as fp:
+            binfo = json.load(fp)
+    except:
+        cprint("未能成功读取目录页面",'red')
+        exit(1)
 
     if(genEpubfromHtml('working/'+wId)==0):
         # to check if mail needed:
