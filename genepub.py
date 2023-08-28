@@ -10,6 +10,8 @@ from termcolor import colored, cprint
 
 import random
 
+from PIL import Image
+
 
 def sortHtmlfromJson(fpath):
     with open(fpath) as f:
@@ -40,29 +42,60 @@ def genHtml(fpath):
 
     return 0
 
+def genCover(fpath,cfg, binfo):
+    # Got materials' info:
+    rawwidth = 0
+    rawheight = 0
+
+    basewidth = 0
+    baseheight = 0
+    ## real cover:
+    with Image.open(fpath+'/rawcover.jpg') as f:
+        # get width and height
+        rawwidth = f.width
+        rawheight = f.height
+
+    # Prepare cover
+    mkcover = ""
+    # Check Type of Cover:
+    if(('fmtype' not in cfg.keys()) or cfg['fmtype']=='default'):
+        # Composite
+        randCover = random.choice(['A','B','C'])
+        ## Base cover:
+        with Image.open('cover'+randCover+'.jpg') as f:
+            # get width and height
+            basewidth = f.width
+            baseheight = f.height
+
+        # To confirm the canva size:
+        cwidth = basewidth -  rawwidth
+        cheight = rawheight
+        sizeStr = str(cwidth)+"x"+str(cheight)
+        
+        mkcover = mkcover + "cp "+fpath+"/rawcover.jpg tmp/cover.jpg;"
+        mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.6)' -draw 'rectangle 0,%d %d,%d' cover%s.jpg tmp/bgcover.jpg;"%((baseheight-rawheight)/2,basewidth,(baseheight+rawheight)/2,randCover)
+        mkcover = mkcover + "convert -gravity east -kerning 15 -font title.ttf -fill '#EEEEEE' -pointsize 100 -annotate +%d+0 '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%(40,binfo['name'])
+        mkcover = mkcover + "composite -gravity west tmp/cover.jpg tmp/bgcover.jpg "+fpath+"/cover.jpg;"
+        print(mkcover)
+        subprocess.run(mkcover, shell=True, check=True)
+
 
 def genEpubfromHtml(fpath,cfg):
     # Gen Html
     genHtml(fpath+'/dumps/')
 
-    # Prepare cover
-    mkcover = ""
-
-    # Check Type of Cover:
-    if(('fmtype' not in cfg.keys()) or cfg['fmtype']=='default'):
-        # Emboss?
-        mkcover = mkcover + "gm convert -border 3x3 -bordercolor 'rgba(100,100,100,0.01)' "+fpath+"/rawcover.jpg tmp/cover.jpg;"
-        # Composite
-        randCover = random.choice(['A','B','C'])
-        mkcover = mkcover + "gm composite -gravity southwest  tmp/cover.jpg cover"+randCover+".jpg "+fpath+"/cover.jpg;rm -rf tmp/*;"
-        print(mkcover)
-        subprocess.run(mkcover, shell=True, check=True)
 
     # Got book info
     cinfo = {}
     try:
         with open(fpath+'/bookinfo') as f:
             cinfo  = json.load(f)
+
+        # Gen Cover
+        genCover(fpath,cfg,cinfo)
+
+
+
         epubCmd = "ebook-convert %s/dumps/index.html %s/%s.epub \
         --authors='%s' \
         --level1-toc='//*[name()=\"h1\" or name()=\"h2\"]'\
