@@ -5,7 +5,7 @@
     "contentKey":"#content",
     "bookName":".info .top h1",
     "authorName":".info .top p:first",
-    "titleKey":".bookname h1",
+    "titleKey":"h1.title",
     "fetchDelay":2,
     "fmimg":".detail-box .imgbox img",
     "fmtype":"refine",

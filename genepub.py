@@ -48,11 +48,17 @@ def genCover(fpath,cfg, binfo):
 
     basewidth = 0
     baseheight = 0
+    mkcover = ""
+    mkcover = mkcover + "convert -resize 300 "+fpath+"/rawcover.jpg tmp/cover.jpg;"
+    subprocess.run(mkcover, shell=True, check=True)
     ## real cover:
-    with Image.open(fpath+'/rawcover.jpg') as f:
+    with Image.open('tmp/cover.jpg') as f:
         # get width and height
         rawwidth = f.width
         rawheight = f.height
+
+    print(rawwidth)
+    print(rawheight)
 
     # Prepare cover
     mkcover = ""
@@ -75,7 +81,6 @@ def genCover(fpath,cfg, binfo):
         sizeStr = str(cwidth)+"x"+str(cheight)
         print(binfo)
         
-        mkcover = mkcover + "convert -resize 300 "+fpath+"/rawcover.jpg tmp/cover.jpg;"
         mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.6)' -draw 'rectangle 0,%d %d,%d' cover%s.jpg tmp/bgcover.jpg;"%((baseheight-rawheight)/2,basewidth,(baseheight+rawheight)/2,randCover)
         mkcover = mkcover + "convert -gravity east -kerning 15 -font title.ttf -fill '#EEEEEE' -pointsize 100 -annotate +%d+0 '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%(40,binfo['name'])
         mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.8)' -draw 'rectangle 0,%d %d,%d' tmp/bgcover.jpg tmp/bgcover.jpg;"%((baseheight/2+rawheight/2+100),basewidth,(baseheight/2+rawheight/2+200))
