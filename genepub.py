@@ -82,11 +82,11 @@ def genCover(fpath,cfg, binfo):
         print(binfo)
         
         mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.6)' -draw 'rectangle 0,%d %d,%d' cover%s.jpg tmp/bgcover.jpg;"%((baseheight-rawheight)/2,basewidth,(baseheight+rawheight)/2,randCover)
-        mkcover = mkcover + "convert -gravity east -kerning 15 -font title.ttf -fill '#EEEEEE' -pointsize 100 -annotate +%d+0 '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%(40,binfo['name'])
+        mkcover = mkcover + "convert -gravity east -kerning 15 -font title.ttf -fill '#EEEEEE' -pointsize 120 -annotate +%d+0 '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%(60,binfo['name'][:9])
         mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.8)' -draw 'rectangle 0,%d %d,%d' tmp/bgcover.jpg tmp/bgcover.jpg;"%((baseheight/2+rawheight/2+100),basewidth,(baseheight/2+rawheight/2+200))
-        mkcover = mkcover + "convert -gravity west -fill 'lightblue' -kerning 5 -font title.ttf -pointsize 60 -annotate +40+%d '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%((rawheight/2+150) ,binfo['author'])
+        mkcover = mkcover + "convert -gravity west -fill 'lightblue' -kerning 5 -font title.ttf -pointsize 60 -annotate +60+%d '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%((rawheight/2+150) ,binfo['author'][:10])
         mkcover = mkcover + "convert -gravity southeast -fill '#555555' -kerning 2 -pointsize 30 -annotate +20+10 '@epubGen' tmp/bgcover.jpg tmp/bgcover.jpg;"
-        mkcover = mkcover + "composite -gravity west tmp/cover.jpg tmp/bgcover.jpg "+fpath+"/cover.jpg;rm tmp/* -rf;"
+        mkcover = mkcover + "composite -gravity west -geometry +20+0 tmp/cover.jpg tmp/bgcover.jpg "+fpath+"/cover.jpg;rm tmp/* -rf;"
         print(mkcover)
         subprocess.run(mkcover, shell=True, check=True)
 
