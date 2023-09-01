@@ -37,7 +37,7 @@ def is_absolute_url(url):
 
 
 def getSingle(url,ind):
-    fId = "%03d_%s"%(ind,hashlib.sha1(url.encode("utf-8")).hexdigest()[:10])
+    fId = "%04d_%s"%(ind,hashlib.sha1(url.encode("utf-8")).hexdigest()[:10])
     results = requests.get(url, headers=headers)
     if(results.status_code==200):
         rencoding = results.encoding
@@ -183,7 +183,7 @@ def parseIndex(url):
             ilist.append({
                 'title':blist.eq(b).text(),
                 'url':blist.eq(b).attr('href'),
-                'fId':"%03d_%s"%(b,hashlib.sha1((siteConfigs['url']+blist.eq(b).attr('href')).encode("UTF-8")).hexdigest()[:10]),
+                'fId':"%04d_%s"%(b,hashlib.sha1((siteConfigs['url']+blist.eq(b).attr('href')).encode("UTF-8")).hexdigest()[:10]),
             })
         # Create table cache
         try:

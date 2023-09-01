@@ -24,16 +24,29 @@ def genHtml(fpath):
     cfg={}
     with open(fpath+'/../bookinfo') as f:
         cfg = json.load(f)
-    # Page prepration
+    # Index Page prepration
     indres = "<html lang='zh'><head><meta charset='UTF-8'><style> \
             </style></head><body>"
+
     # Sorting all existed files
     for c in [_ for _ in sorted(os.listdir(fpath)) if _.endswith('json') ]:
         res = sortHtmlfromJson(fpath+c)
+        ### Folder style
+        ## Write single pages
+#        singlec = "<html lang='zh'><head><meta charset='UTF-8'><style></style></head><body>"
+#        singlec = singlec+res[0]
+#        singlec = singlec + "</body></html>"
+#        with open(r'%s/%s.html'%(fpath,c), 'wb') as fp:
+#            fp.write(HTMLBeautifier.beautify(singlec, 4).encode('utf-8'))
+#            fp.flush()
+#        # Prepare index and link
+#        indres = indres + "<a href='"+c+".html'>"+res[1]["title"]+"</a>"
+
+
+        ### Single File style
         indres = indres + res[0]
 
     indres = indres + "</body></html>"
-
     
     with open(r'%s/index.html'%(fpath), 'wb') as fp:
         fp.write(HTMLBeautifier.beautify(indres, 4).encode('utf-8'))
@@ -57,9 +70,6 @@ def genCover(fpath,cfg, binfo):
         rawwidth = f.width
         rawheight = f.height
 
-    print(rawwidth)
-    print(rawheight)
-
     # Prepare cover
     mkcover = ""
     # Check Type of Cover:
@@ -79,7 +89,6 @@ def genCover(fpath,cfg, binfo):
         cwidth = basewidth -  rawwidth
         cheight = rawheight
         sizeStr = str(cwidth)+"x"+str(cheight)
-        print(binfo)
         
         mkcover = mkcover + "convert  -fill 'rgba(0,0,0,0.6)' -draw 'rectangle 0,%d %d,%d' cover%s.jpg tmp/bgcover.jpg;"%((baseheight-rawheight)/2,basewidth,(baseheight+rawheight)/2,randCover)
         mkcover = mkcover + "convert -gravity east -kerning 15 -font title.ttf -fill '#EEEEEE' -pointsize 120 -annotate +%d+0 '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%(60,binfo['name'][:9])
@@ -87,7 +96,6 @@ def genCover(fpath,cfg, binfo):
         mkcover = mkcover + "convert -gravity west -fill 'lightblue' -kerning 5 -font title.ttf -pointsize 60 -annotate +60+%d '%s' tmp/bgcover.jpg tmp/bgcover.jpg;"%((rawheight/2+150) ,binfo['author'][:10])
         mkcover = mkcover + "convert -gravity southeast -fill '#555555' -kerning 2 -pointsize 30 -annotate +20+10 '@epubGen' tmp/bgcover.jpg tmp/bgcover.jpg;"
         mkcover = mkcover + "composite -gravity west -geometry +20+0 tmp/cover.jpg tmp/bgcover.jpg "+fpath+"/cover.jpg;rm tmp/* -rf;"
-        print(mkcover)
         subprocess.run(mkcover, shell=True, check=True)
 
 
@@ -112,17 +120,16 @@ def genEpubfromHtml(fpath,cfg):
         --book-producer epubGen \
         --language Chinese \
         --pretty-print \
+        --input-encoding 'utf-8'\
         --output-profile tablet \
-        --max-levels=0 \
+        --max-levels=1 \
         --title='%s' \
-        --epub-inline-toc \
-        --toc-title %s \
-        " % (fpath, fpath, cinfo['name'], cinfo['author'], cinfo['name'],cinfo['name'])
+        " % (fpath, fpath, cinfo['name'], cinfo['author'], cinfo['name'])
 
         if(os.path.exists("%s/cover.jpg"%(fpath))):
             epubCmd = epubCmd + "--cover %s/cover.jpg "%(fpath)
 
-        #cprint(epubCmd,'white',attrs=['dark'])
+        cprint(epubCmd,'white',attrs=['dark'])
         subprocess.run(epubCmd, shell=True, check=True)
         cprint("生成ePub完成 (/%s/%s.epub)"%(fpath,cinfo['name']),'blue',attrs=['bold'])
         return 0
