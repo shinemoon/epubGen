@@ -158,6 +158,11 @@ def parseIndex(url):
         #to fetch cover picture
         try:
             picurl = url_normalize(doc(siteConfigs['fmimg']).attr('src'))
+            if(picurl[0]=='/'):
+                picurl = siteConfigs['url']+picurl
+            else:
+                picurl = url[0:str.rindex('/')+1] +picurl
+
             picraw = requests.get(picurl)
             with open(r'working/'+wId+'/rawcover.jpg', 'wb') as f:
                 f.write(picraw.content)
@@ -205,7 +210,7 @@ if __name__=='__main__':
     global bookId, indexPage, wId
 
     # Debug Flag
-    debugFlag = False
+    debugFlag = True
     debugSample = 8 
     # Config Relavant
     siteConfigs = {}
