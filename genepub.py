@@ -19,14 +19,18 @@ def sortHtmlfromJson(fpath):
     res = res + "<div>" + ccontent['content']+ "</div>" 
     return [res, ccontent]
 
-def genHtml(fpath):
+def genHtml(fpath,args):
     cfg={}
     with open(fpath+'/../bookinfo') as f:
         cfg = json.load(f)
     # Index Page prepration
     indres = "<html lang='zh'><head><style> \
-            <meta charset='utf-8'> \
-            </style></head><body><div id='index-page' display='none'>"
+            <meta charset='utf-8'>"
+
+    if(args.toc):
+        indres = indres + "</style></head><body><div id='index-page' style='display:block!important'><h1>全书目录</h1><ul>"
+    else:
+        indres = indres + "</style></head><body><div id='index-page' style='display:none!important'><h1>全书目录</h1><ul>"
 
     # Sorting all existed files
     for c in [_ for _ in sorted(os.listdir(fpath)) if _.endswith('json') ]:
@@ -45,13 +49,13 @@ def genHtml(fpath):
             fp.write(singlec)
             fp.flush()
         # Prepare index and link
-        indres = indres + "<a href='"+c+".html'>"+res[1]["title"]+"</a>"
+        indres = indres + "<li><a href='"+c+".html'>"+res[1]["title"]+"</a></li>"
 
 
         ### Single File style
         #indres = indres + res[0]
 
-    indres = indres + "</div></body></html>"
+    indres = indres + "</ul></div></body></html>"
     
     with open(r'%s/index.html'%(fpath), 'w') as fp:
         fp.write(indres)
@@ -106,7 +110,7 @@ def genCover(fpath,cfg, binfo):
 
 def genEpubfromHtml(fpath,cfg,args):
     # Gen Html
-    genHtml(fpath+'/dumps/')
+    genHtml(fpath+'/dumps/',args)
 
 
     # Got book info
