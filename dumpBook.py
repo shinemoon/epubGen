@@ -4,7 +4,6 @@ from pprint import pprint as ppt
 import html
 from pyquery import PyQuery as pq
 from fake_useragent import UserAgent
-from html5print import HTMLBeautifier
 
 import pdb
 import json
@@ -290,7 +289,7 @@ if __name__=='__main__':
         cprint("未能成功读取目录页面",'red')
         exit(1)
 
-    if(genEpubfromHtml('working/'+wId, siteConfigs)==0):
+    if(genEpubfromHtml('working/'+wId, siteConfigs,args)==0):
         # to check if mail needed:
         if(args.mail):
             cprint("生成完毕，发送邮件!",'green',attrs=['bold'])

@@ -1,7 +1,6 @@
 import subprocess,os, glob
 from pprint import pprint as ppt
 import html
-from html5print import HTMLBeautifier 
 import pdb
 import json
 
@@ -25,21 +24,25 @@ def genHtml(fpath):
     with open(fpath+'/../bookinfo') as f:
         cfg = json.load(f)
     # Index Page prepration
-    indres = "<html lang='zh'><head><meta charset='UTF-8'><style> \
-            </style></head><body>"
+    indres = "<html lang='zh'><head><style> \
+            <meta charset='utf-8'> \
+            </style></head><body><div id='index-page' display='none'>"
 
     # Sorting all existed files
     for c in [_ for _ in sorted(os.listdir(fpath)) if _.endswith('json') ]:
         res = sortHtmlfromJson(fpath+c)
         ### Folder style
         ## Write single pages
-        singlec = "<html lang='zh'><head><meta charset='UTF-8'><style></style></head><body>"
+
+        #!! Quite Wierd Workaround! ISO-8859-1 needed , otherwise ebook-convert will have issue when decoding the linked html page...
+
+        #singlec = "<html lang='zh'><head> <meta charset='utf-8'> <style></style></head><body>"
+        singlec = "<html lang='zh'><head> <meta charset='ISO-8859-1'> <style></style></head><body>"
+            
         singlec = singlec+res[0]
         singlec = singlec + "</body></html>"
         with open(r'%s/%s.html'%(fpath,c), 'w') as fp:
-            singlec = singlec.encode('utf-8').decode('utf-8').encode('utf-8')
-            fp.write(HTMLBeautifier.beautify(str(singlec), 4))
-            #fp.write(str(singlec))
+            fp.write(singlec)
             fp.flush()
         # Prepare index and link
         indres = indres + "<a href='"+c+".html'>"+res[1]["title"]+"</a>"
@@ -48,10 +51,10 @@ def genHtml(fpath):
         ### Single File style
         #indres = indres + res[0]
 
-    indres = indres + "</body></html>"
+    indres = indres + "</div></body></html>"
     
-    with open(r'%s/index.html'%(fpath), 'wb') as fp:
-        fp.write(HTMLBeautifier.beautify(indres, 4).encode('utf-8'))
+    with open(r'%s/index.html'%(fpath), 'w') as fp:
+        fp.write(indres)
         fp.flush()
 
     return 0
@@ -101,7 +104,7 @@ def genCover(fpath,cfg, binfo):
         subprocess.run(mkcover, shell=True, check=True)
 
 
-def genEpubfromHtml(fpath,cfg):
+def genEpubfromHtml(fpath,cfg,args):
     # Gen Html
     genHtml(fpath+'/dumps/')
 
