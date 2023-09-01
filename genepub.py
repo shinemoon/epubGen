@@ -33,18 +33,20 @@ def genHtml(fpath):
         res = sortHtmlfromJson(fpath+c)
         ### Folder style
         ## Write single pages
-#        singlec = "<html lang='zh'><head><meta charset='UTF-8'><style></style></head><body>"
-#        singlec = singlec+res[0]
-#        singlec = singlec + "</body></html>"
-#        with open(r'%s/%s.html'%(fpath,c), 'wb') as fp:
-#            fp.write(HTMLBeautifier.beautify(singlec, 4).encode('utf-8'))
-#            fp.flush()
-#        # Prepare index and link
-#        indres = indres + "<a href='"+c+".html'>"+res[1]["title"]+"</a>"
+        singlec = "<html lang='zh'><head><meta charset='UTF-8'><style></style></head><body>"
+        singlec = singlec+res[0]
+        singlec = singlec + "</body></html>"
+        with open(r'%s/%s.html'%(fpath,c), 'w') as fp:
+            singlec = singlec.encode('utf-8').decode('utf-8').encode('utf-8')
+            fp.write(HTMLBeautifier.beautify(str(singlec), 4))
+            #fp.write(str(singlec))
+            fp.flush()
+        # Prepare index and link
+        indres = indres + "<a href='"+c+".html'>"+res[1]["title"]+"</a>"
 
 
         ### Single File style
-        indres = indres + res[0]
+        #indres = indres + res[0]
 
     indres = indres + "</body></html>"
     
@@ -120,7 +122,6 @@ def genEpubfromHtml(fpath,cfg):
         --book-producer epubGen \
         --language Chinese \
         --pretty-print \
-        --input-encoding 'utf-8'\
         --output-profile tablet \
         --max-levels=1 \
         --title='%s' \
