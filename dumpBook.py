@@ -210,7 +210,7 @@ if __name__=='__main__':
     global bookId, indexPage, wId
 
     # Debug Flag
-    debugFlag = True
+    debugFlag = False
     debugSample = 8 
     # Config Relavant
     siteConfigs = {}
