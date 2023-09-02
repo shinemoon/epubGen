@@ -1,0 +1,15 @@
+{ 
+    "name":"香书网",
+    "url":"https://www.xbiqu.org",
+    "indexKey":".section-box:nth-child(4) li a",
+    "indexList":".listpage select option",
+    "contentKey":"#content",
+    "bookName":".info .top h1",
+    "authorName":".info .top p:nth-child(1)",
+    "titleKey":"#content h1",
+    "fetchDelay":2,
+    "fmimg":".detail-box img.imgs",
+    "fmtype":"refine",
+    "excludeKeys":["h1"],
+    "recmail":"shinemoon@foxmail.com"
+}

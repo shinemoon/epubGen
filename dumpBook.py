@@ -31,8 +31,19 @@ from url_normalize import url_normalize
 from urllib.parse import urlparse
 
 def is_absolute_url(url):
-    parsed_url = urlparse(url)
-    return bool(parsed_url.scheme)
+    return (url[0]=='/')
+
+def detectRealUrl(url, baseurl):
+    res = url
+    if(is_absolute_url(url)):
+        res = siteConfigs['url']+url
+    elif(url[0:7]=='http://' or url[0:8]=='https://'):
+        res = url
+    else:
+        res = baseurl[0:baseurl.rindex('/')+1]+url
+    return res
+
+
 
 
 def getSingle(url,ind):
@@ -42,12 +53,13 @@ def getSingle(url,ind):
         rencoding = results.encoding
         results.encoding='utf-8'
         doc = pq(results.text)
+        ctitle = doc(siteConfigs['titleKey']).text()
         for k in siteConfigs['excludeKeys']:
             doc(k).remove()
         tunedContent = doc(siteConfigs['contentKey']).html()
         dumpContent = {
             # Title
-            'title':doc(siteConfigs['titleKey']).text(),
+            'title':ctitle,
             # Content
             'content':tunedContent,
             # url
@@ -104,6 +116,7 @@ def fetchContent(refresh):
         cprint("重新开始下载所有",'blue',attrs=['dark'])
 
     cprint("开始获取正文",'light_blue',attrs=['bold'])
+    print(glist)
     for i in glist:
         print(i['title'])
 
@@ -116,12 +129,7 @@ def fetchContent(refresh):
             res = 0
             singleUrl = glist[i]['url']
             global indexPage
-
-            if(is_absolute_url(singleUrl)):
-                res = getSingle(siteConfigs['url']+glist[i]['url'],idlist[i])
-            else:
-                res = getSingle(indexPage+glist[i]['url'],idlist[i])
-
+            res = getSingle(detectRealUrl(singleUrl, indexPage),i)
             sleep(siteConfigs['fetchDelay'])
             if(res!=-1):
                 hlist.append(glist[i])
@@ -139,29 +147,54 @@ def fetchContent(refresh):
     return 0 
 
 def parseIndex(url):
-    cprint("开始刷新目录",'light_blue',attrs=['bold'])
     cprint("创建工作目录",'blue',attrs=['dark'])
     subprocess.run("mkdir -p working/"+wId+"/dumps", shell=True, check=True)
     ilist=[]
-    results = requests.get(indexPage, headers=headers)
-    if(results.status_code==200):
-        rencoding = results.encoding
-        results.encoding = 'utf-8'
-        # Try just print
-        content = html.escape(results.text)
-    
-        # pyQuery
-        doc = pq(results.text)
-        blist = doc(siteConfigs['indexKey'])
+    indList=[]
+    blist=[]
+    doc = None
+
+    # sub def
+    def getList(url):
+        cprint("开始刷新目录:%s"%(url),'light_blue',attrs=['dark'])
+        res = None
+        results = requests.get(url, headers=headers)
+        if(results.status_code==200):
+            rencoding = results.encoding
+            results.encoding = 'utf-8'
+            # Try just print
+            content = html.escape(results.text)
+            # pyQuery
+            doc = pq(results.text)
+            # to fetch full list
+            res = doc(siteConfigs['indexKey'])
+        return (res,doc)
+
+    (curList,doc) = getList(url)
+    blist = blist + curList 
+
+    if('indexList' in siteConfigs.keys()):
+        # There is select list for some sites!
+        # Get the index page list:
+        cprint("多页目录存在，开始拉取目录页",'yellow')
+        olist = doc(siteConfigs['indexList'])
+        for i in olist:
+            iurl = i.values()[0]
+            iurl = detectRealUrl(iurl,url) 
+            indList.append(iurl)
+        for c in indList:
+            (curList,doc) = getList(c)
+            blist = blist + curList 
+    else:
+        pass
+
+    if(blist != None):
         ilen = len(blist)
 
         #to fetch cover picture
         try:
             picurl = url_normalize(doc(siteConfigs['fmimg']).attr('src'))
-            if(picurl[0]=='/'):
-                picurl = siteConfigs['url']+picurl
-            else:
-                picurl = url[0:str.rindex('/')+1] +picurl
+            picurl = detectRealUrl(picurl, url)
 
             picraw = requests.get(picurl)
             with open(r'working/'+wId+'/rawcover.jpg', 'wb') as f:
@@ -184,10 +217,11 @@ def parseIndex(url):
         if(debugFlag):
             ilen = debugSample
         for b in range(ilen):
+            #pdb.set_trace()
             ilist.append({
-                'title':blist.eq(b).text(),
-                'url':blist.eq(b).attr('href'),
-                'fId':"%04d_%s"%(b,hashlib.sha1((siteConfigs['url']+blist.eq(b).attr('href')).encode("UTF-8")).hexdigest()[:10]),
+                'title':blist[b].text,
+                'url':blist[b].get('href'),
+                'fId':"%04d_%s"%(b,hashlib.sha1((siteConfigs['url']+blist[b].get('href')).encode("UTF-8")).hexdigest()[:10]),
             })
         # Create table cache
         try:

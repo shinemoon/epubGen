@@ -39,12 +39,14 @@
 >     "name":"范例网站",       
 >     "url":"https://www.xyz.org",     
 >     "indexKey":"#list dd a",     
+>     "indexList":".listpage select option",
 >     "contentKey":"#content",     
 >     "bookName":"#info h1",     
 >     "authorName":"#info p:nth-child(2)",     
 >     "titleKey":".bookname h1",     
 >     "fetchDelay":2,     
 >     "fmimg":"#fmimg img",     
+>     "fmtype":"refine",
 >     "excludeKeys":["script","#content_tip","p"],    
 >     "recmail":"xyz@hojo.com"    
 > }     
@@ -54,6 +56,7 @@
 - "name":"范例网站",                                        网站名称
 - "url":"https://www.xyz.org",                              域名/地址
 - "indexKey":"#list dd a",                                  目录页中各章节的CSS选择
+- "indexList":".listpage select option",                    如果目录页有分页，该选项用于挑出便利这些分页（一般就是select下拉的option value)参考范例配置
 - "bookName":"#info h1",                                    目录页中书名的CSS选择
 - "fmimg":"#fmimg img",                                     目录页中的封面选择
 - "authorName":"#info p:nth-child(2)",                      目录页中作者名的CSS选择
@@ -61,6 +64,7 @@
 - "contentKey":"#content",                                  正文页中的正文内容选择
 - "excludeKeys":["script","#content_tip","p"]               正文页中的排除元素（比如广告）
 - "fetchDelay":2,                                           文章获取中的间隔时间（避免过快访问被ban）
+- "fmtype":"refine",                                        是否采用优化封面（留空或者default则直接用原图，一般分辨率很低）
 - "recmail":"xyz@hojo.com",                                 启用发送邮件功能时，接收邮箱的地址
 
 
