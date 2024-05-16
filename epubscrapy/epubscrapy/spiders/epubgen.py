@@ -29,22 +29,22 @@ class EpubgenSpider(CrawlSpider):
 
     if(USEPLAYWRIGHT):
         playwright_settings = {
-          # For playWright Solution         
-            "DOWNLOAD_HANDLERS" : {
-                                            "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-                                            "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-                                    },
-            "PLAYWRIGHT_LAUNCH_OPTIONS":{
-                                            "headless": True,
-                                        } 
-        }    
+                # For playWright Solution
+                "DOWNLOAD_HANDLERS" : {
+                    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+                    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+                    },
+                "PLAYWRIGHT_LAUNCH_OPTIONS":{
+                    "headless": True,
+                    }
+                }
     else:
         playwright_settings = {
-            "DOWNLOADER_MIDDLEWARES" : {
-                'scrapy_playwright.middlewares.PlaywrightRequestMiddleware': None,
-                'scrapy_playwright.middlewares.PlaywrightResponseMiddleware': None,
-            }
-        }    
+                "DOWNLOADER_MIDDLEWARES" : {
+                    'scrapy_playwright.middlewares.PlaywrightRequestMiddleware': None,
+                    'scrapy_playwright.middlewares.PlaywrightResponseMiddleware': None,
+                    }
+                }
 
     cookie_dict = {'t':'64d056276329451626481e87d09e8340','r':'4079'}
 
@@ -64,7 +64,6 @@ class EpubgenSpider(CrawlSpider):
                 },
             "DEFAULT_REQUEST_HEADERS": custom_headers,
             }
-
 
     custom_settings = {**common_settings, **playwright_settings}
 
@@ -104,8 +103,8 @@ class EpubgenSpider(CrawlSpider):
             # GET request
             self.logger.info(f"Start to Request! {url}")
             yield scrapy.Request(
-                url=url,
-                cookies=self.cookie_dict,
-                meta = self.custom_meta,
-            )
+                    url=url,
+                    cookies=self.cookie_dict,
+                    meta = self.custom_meta,
+                    )
 
