@@ -30,6 +30,16 @@ from url_normalize import url_normalize
 
 from urllib.parse import urlparse
 
+# Add Spider based solution:
+
+from scrapy.crawler import CrawlerProcess
+from scrapy.spiders import Spider
+from scrapy import Request
+
+from epubscrapy.epubscrapy.spiders import epubgen as epubspider
+
+
+
 def is_absolute_url(url):
     return (url[0]=='/')
 
