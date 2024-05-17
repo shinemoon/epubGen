@@ -19,6 +19,9 @@ def getBookIndex(bkUrl=""):
     """
     import pdb
 
+    if bkUrl=="":
+        bkUrl = "https://www.kuaishu5.com/b265521/"
+
 
     # 设置 scrapy.cfg 文件路径
     # 设置 Scrapy 项目的配置文件路径
@@ -36,7 +39,7 @@ def getBookIndex(bkUrl=""):
 
 
     # Add your spider to the process
-    process.crawl(EpubgenSpider, start_urls=["https://www.kuaishu5.com/b265521/"])
+    process.crawl(EpubgenSpider, start_urls=[bkUrl])
     
     # Start the crawling process and add a callback to log stats after the crawl
     process.start(stop_after_crawl=True)
@@ -55,5 +58,4 @@ def log_stats(process):
 # Start/Resume to fetch content
 
 if __name__=='__main__':
-    #fire.Fire(getBookIndex)
-    getBookIndex()
+    fire.Fire(getBookIndex)

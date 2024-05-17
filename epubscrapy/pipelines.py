@@ -11,5 +11,9 @@ from itemadapter import ItemAdapter
 class EpubscrapyPipeline:
     def process_item(self, item, spider):
         spider.crawler.stats.inc_value('page_cnt')
-        print(item)
+        # For Index handling
+        if(item['type']=='index'):
+            print(item)
         return item
+
+

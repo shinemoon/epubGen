@@ -40,7 +40,6 @@ class EpubgenSpider(CrawlSpider):
             Rule(LinkExtractor(allow=(), unique=True,restrict_css=cfg["pageKey"]), process_request='epubRequest',callback='parse_index', follow=True),
             ]
 
-    pdb.set_trace()
 
     if(USEPLAYWRIGHT):
         playwright_settings = {
@@ -111,6 +110,7 @@ class EpubgenSpider(CrawlSpider):
             href = link.css(self.cfg['indexHrefKey']).get()
             title = link.css(self.cfg['indexTitleKey']).get()
             yield {
+                'type': 'index',
                 'href': response.urljoin(href),
                 'title': title.strip() if title else ''
             }
