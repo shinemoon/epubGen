@@ -4,43 +4,34 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 import pdb
 
+import hashlib, subprocess, requests, json
+from termcolor import colored, cprint
+from utils import detectRealUrl
+from url_normalize import url_normalize
+
 class EpubgenSpider(CrawlSpider):
-    cfg= {
-            #Site Info
-            "name":"快书网",
-            "url":"https://www.kuaishu5.com",
-            "domain":["kuaishu5.com"],
-            "defaultUrl":["https://www.kuaishu5.com/b252247/"],
-            "cookies":{'t':'64d056276329451626481e87d09e8340','r':'4079'},
-            "useplaywright":True,
-            #Index Parser
-            "pageKey":".index-container-btn",
-            "indexKey":"#list #content_1 a",
-            "indexHrefKey":"::attr(href)",
-            "indexTitleKey":"dd::text",
-            #Content Parser
-            "contentKey":"#content",
-            "bookName":"#info h1",
-            "authorName":"#info p:nth-child(2)",
-            "titleKey":".bookname h1",
-            "fetchDelay":2,
-            "fmimg":"#fmimg img",
-            "fmtype":"refine",
-            "excludeKeys":["script","#content_tip","p"],
-            #Mail
-            "recmail":"shinemoon@foxmail.com",
+    name="epubGenSpider"
+    cfg={}
+    cookie_dict={}
+
+    custom_headers={
+        'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0'
+    }
+    custom_meta = {
+            "playwright": USEPLAYWRIGHT,
+            "playwright_include_page": USEPLAYWRIGHT,
+            "cookiejar": 1,
             }
 
-    name = "epubgenSpider"
-    allowed_domains = cfg["domain"]
-    handle_httpstatus_list = [404,500, 403]
-    #Default URL for Demo Purpose
-    start_urls = cfg["defaultUrl"]
-    rules = [
-            Rule(LinkExtractor(allow=(), unique=True,restrict_css=cfg["pageKey"]), process_request='epubRequest',callback='parse_index', follow=True),
-            ]
-
-
+    # Set the log level to INFO for this specific spider
+    common_settings = {
+            "LOG_LEVEL": "INFO",
+            "LOG_FILE_APPEND": False,
+            "ITEM_PIPELINES" : {
+                'epubscrapy.pipelines.EpubscrapyPipeline': 300,
+                },
+            "DEFAULT_REQUEST_HEADERS": custom_headers,
+    }
     if(USEPLAYWRIGHT):
         playwright_settings = {
                 # For playWright Solution
@@ -59,67 +50,80 @@ class EpubgenSpider(CrawlSpider):
                     'scrapy_playwright.middlewares.PlaywrightResponseMiddleware': None,
                     }
                 }
-
-    cookie_dict = cfg["cookies"]
-
-    custom_headers={
-            'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0'
-            }
-    custom_meta = {
-            "playwright": USEPLAYWRIGHT,
-            "playwright_include_page": USEPLAYWRIGHT,
-            "cookiejar": 1,
-            }
-    # Set the log level to INFO for this specific spider
-    common_settings = {
-            "LOG_LEVEL": "INFO",
-            "LOG_FILE_APPEND": False,
-            "ITEM_PIPELINES" : {
-                'epubscrapy.pipelines.EpubscrapyPipeline': 300,
-                },
-            "DEFAULT_REQUEST_HEADERS": custom_headers,
-            }
-
-
     custom_settings = {**common_settings, **playwright_settings}
 
-    def __init__(self, start_urls=None, *args, **kwargs):
+    def initwConf(self, cfg, mode):
+        self.cfg=cfg
+        self.allowed_domains = cfg["domain"]
+        self.handle_httpstatus_list = [404,500, 403]
+        #Default URL for Demo Purpose
+        self.start_urls = cfg["defaultUrl"]
+        if(mode=='index'):
+            self.rules = [
+                    # To fetch index list
+                    Rule(LinkExtractor(allow=(), unique=True,restrict_css=cfg["pageKey"]), process_request='epubRequest',callback='parse_index', follow=True),
+                    ]
+        else if (mode=='content'):
+            #书籍内容抓取
+            self.rules = [
+                    # To fetch index list
+                    Rule(LinkExtractor(allow=(), unique=True,restrict_css=cfg["pageKey"]), process_request='epubRequest',callback='parse_index', follow=True),
+                    ]
+
+        self.cookie_dict = cfg["cookies"]
+    
+    def __init__(self, start_urls=None, conf=None, mode='index', *args, **kwargs):
         super(EpubgenSpider, self).__init__(*args, **kwargs)
-#        pdb.set_trace()
-#        print(f'========> {start_urls}')
         if start_urls is not None:
             self.start_urls = start_urls
+        if conf is not None:
+            self.initwConf(conf, mode=mode)
+
 
     def parse(self, response):
-        print('====================')
-        print('   Default ')
-        print('====================')
-        print(response.url)
         pass
 
     def parse_index(self, response):
-        print('====================')
-        print(f' Parsing Index in :{response.url} ')
-        print('====================')
+        cprint(f' Parsing Index in :{response.url} ','yellow')
+        wId = response.meta.get('wId')
         # Define how to parse the response
         # Extract all hrefs from links matching the CSS selector
         links = response.css(self.cfg['indexKey'])
-        
+        try:
+            picurl = response.css(self.cfg['fmimg']).get()
+            picurl = url_normalize(picurl)
+            picurl = detectRealUrl(picurl, response.url, self.cfg)
+            picraw = requests.get(picurl)
+            with open(r'working/'+wId+'/rawcover.jpg', 'wb') as f:
+                f.write(picraw.content)
+                f.flush()
+        except Exception as e:
+            cprint(repr(e),'white',attrs=['dark'])
+            # placeholder for default pic
+            subprocess.run("cp cover.jpg working/%s/rawcover.jpg"%(wId),shell=True, check=True)
+            cprint("无封面图片，采用自动生成",'red',attrs=['dark'])
+        # Extract other book level info
+        binfo = {
+                'name':response.css(self.cfg['bookName']).get(),
+                'author':response.css(self.cfg['authorName']).get(),
+                }
+        with open(r'working/'+wId+'/bookinfo', 'w', encoding='utf-8') as fp:
+            json.dump(binfo,fp,ensure_ascii = False)
+            fp.flush()
+
         # Iterate over each link and extract href and title
-        for link in links:
-            href = link.css(self.cfg['indexHrefKey']).get()
+        for index,link in enumerate(links):
+            url=response.urljoin(link.css(self.cfg['indexHrefKey']).get())
             title = link.css(self.cfg['indexTitleKey']).get()
             yield {
                 'type': 'index',
-                'href': response.urljoin(href),
-                'title': title.strip() if title else ''
+                'url': url,
+                'title': title.strip() if title else '',
+                'wId': wId,
+                'fId':"%05d_%s"%(index,hashlib.sha1((self.cfg['url']+url).encode("UTF-8")).hexdigest()[:10]),
             }
 
     def parse_book(self, response):
-        print('====================')
-        print('   book ')
-        print('====================')
-        print(response.url)
         # Define how to parse the response
         pass
 
@@ -140,11 +144,17 @@ class EpubgenSpider(CrawlSpider):
 
     def start_requests(self):
         for url in self.start_urls:
+            wId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10];
+            cprint("创建工作目录",'blue',attrs=['dark'])
+            subprocess.run("mkdir -p working/"+wId+"/dumps", shell=True, check=True)
+
+            extra_meta = {'wId': wId}
+            meta = {**self.custom_meta, **extra_meta}
             # GET request
             self.logger.info(f"Start to Request! {url}")
             yield scrapy.Request(
                     url=url,
                     cookies=self.cookie_dict,
-                    meta = self.custom_meta,
+                    meta = meta,
                     callback=self.parse_index,
                     )
