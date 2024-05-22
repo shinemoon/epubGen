@@ -67,11 +67,14 @@ def getBookIndex(bkUrl=""):
 
     # Add your spider to the process
     # 获取目录列表
-    process.crawl(EpubgenSpider, start_urls=[bkUrl], conf=curCfg, mode=='index')
+    process.crawl(EpubgenSpider, start_urls=[bkUrl], conf=curCfg, mode='content')
     process.start(stop_after_crawl=True)
 
-
     # 按照任务列表获取内容
+    # 获取目录列表
+    #process.crawl(EpubgenSpider, start_urls=[bkUrl], conf=curCfg, mode='content')
+    #process.start(stop_after_crawl=True)
+
 
 
 

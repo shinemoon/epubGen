@@ -6,13 +6,19 @@ import pdb
 
 import hashlib, subprocess, requests, json
 from termcolor import colored, cprint
-from utils import detectRealUrl
+from utils import detectRealUrl,read_working_list
 from url_normalize import url_normalize
+
+from epubscrapy.items import EpubscrapyItem as chapter
 
 class EpubgenSpider(CrawlSpider):
     name="epubGenSpider"
     cfg={}
     cookie_dict={}
+    mode='index'
+    wIdList=[]
+
+    page = None
 
     custom_headers={
         'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0'
@@ -53,6 +59,7 @@ class EpubgenSpider(CrawlSpider):
     custom_settings = {**common_settings, **playwright_settings}
 
     def initwConf(self, cfg, mode):
+        self.mode=mode
         self.cfg=cfg
         self.allowed_domains = cfg["domain"]
         self.handle_httpstatus_list = [404,500, 403]
@@ -63,27 +70,39 @@ class EpubgenSpider(CrawlSpider):
                     # To fetch index list
                     Rule(LinkExtractor(allow=(), unique=True,restrict_css=cfg["pageKey"]), process_request='epubRequest',callback='parse_index', follow=True),
                     ]
-        else if (mode=='content'):
+        elif (mode=='content'):
             #书籍内容抓取
+            #按照wId来获取工作文件列表
             self.rules = [
-                    # To fetch index list
-                    Rule(LinkExtractor(allow=(), unique=True,restrict_css=cfg["pageKey"]), process_request='epubRequest',callback='parse_index', follow=True),
+                    # Empty Rule, just following the start_urls from workinglist
                     ]
-
         self.cookie_dict = cfg["cookies"]
     
     def __init__(self, start_urls=None, conf=None, mode='index', *args, **kwargs):
         super(EpubgenSpider, self).__init__(*args, **kwargs)
-        if start_urls is not None:
-            self.start_urls = start_urls
         if conf is not None:
             self.initwConf(conf, mode=mode)
+        # To Override Start Url
+        if start_urls is not None:
+            if(mode=='index'):
+                self.start_urls = start_urls
+            elif(mode=='content'):
+                # To parse and get content list
+                self.start_urls = []
+                for url in start_urls:
+                    wId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10];
+                    data = read_working_list(wId)
+                    # 提取所有的url
+                    self.start_urls = self.start_urls + [item['url'] for item in data]
+                    self.wIdList = self.wIdList + [wId]*len(data)
 
 
     def parse(self, response):
         pass
 
-    def parse_index(self, response):
+    async def parse_index(self, response):
+        if USEPLAYWRIGHT: 
+            self.page = response.meta["playwright_page"]
         cprint(f' Parsing Index in :{response.url} ','yellow')
         wId = response.meta.get('wId')
         # Define how to parse the response
@@ -122,10 +141,29 @@ class EpubgenSpider(CrawlSpider):
                 'wId': wId,
                 'fId':"%05d_%s"%(index,hashlib.sha1((self.cfg['url']+url).encode("UTF-8")).hexdigest()[:10]),
             }
+        if USEPLAYWRIGHT:
+            if self.page and not self.page.is_closed():
+                await self.page.close()
 
-    def parse_book(self, response):
+
+    async def parse_book(self, response):
+        if USEPLAYWRIGHT: 
+            self.page = response.meta["playwright_page"]
+
         # Define how to parse the response
-        pass
+        wId = response.meta.get('wId')
+        #print(response.css('#booktxt p::text').getall())
+        curChar = chapter()
+        curChar['type']='content'
+        curChar['url']=response.url
+        curChar['wId']=wId
+        print(curChar)
+        if USEPLAYWRIGHT:
+            if self.page and not self.page.is_closed():
+                await self.page.close()
+        return curChar
+
+
 
     def epubRequest(self, request, response):
         self.logger.info(f"ePub Requesting:  {request.url}")
@@ -143,18 +181,34 @@ class EpubgenSpider(CrawlSpider):
 
 
     def start_requests(self):
-        for url in self.start_urls:
-            wId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10];
-            cprint("创建工作目录",'blue',attrs=['dark'])
-            subprocess.run("mkdir -p working/"+wId+"/dumps", shell=True, check=True)
-
-            extra_meta = {'wId': wId}
-            meta = {**self.custom_meta, **extra_meta}
-            # GET request
-            self.logger.info(f"Start to Request! {url}")
-            yield scrapy.Request(
-                    url=url,
-                    cookies=self.cookie_dict,
-                    meta = meta,
-                    callback=self.parse_index,
-                    )
+        if(self.mode=='index'):
+            cprint("获取目录",'blue')
+            for url in self.start_urls:
+                wId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10];
+                cprint("创建工作目录",'blue',attrs=['dark'])
+                subprocess.run("mkdir -p working/"+wId+"/dumps", shell=True, check=True)
+                extra_meta = {'wId': wId}
+                meta = {**self.custom_meta, **extra_meta}
+                # GET request
+                self.logger.info(f"Start to Request! {url}")
+                yield scrapy.Request(
+                        url=url,
+                        cookies=self.cookie_dict,
+                        meta = meta,
+                        callback=self.parse_index,
+                        #errback=self.errback_close_page,
+                        )
+        elif(self.mode=='content'):
+            cprint("获取内容",'blue',attrs=['dark'])
+            # start url已经获取完毕(__init__)
+            for index,url in enumerate(self.start_urls):
+                extra_meta = {'wId': self.wIdList[index]}
+                meta = {**self.custom_meta, **extra_meta}
+                # GET request
+                self.logger.info(f"Start to Request! {url}")
+                yield scrapy.Request(
+                        url=url,
+                        cookies=self.cookie_dict,
+                        meta = meta,
+                        callback=self.parse_book,
+                        )

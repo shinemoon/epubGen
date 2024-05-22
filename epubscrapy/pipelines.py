@@ -3,6 +3,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
+from termcolor import colored, cprint
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
@@ -23,11 +24,13 @@ class EpubscrapyPipeline:
                     data = json.load(fp)
             except FileNotFoundError:
                 data = []
-    
             # 将新的 item 插入到列表中
             data.append(dict(item))
-    
             # 将更新后的列表写回文件
             with open(file_path, 'w', encoding='utf-8') as fp:
                 json.dump(data, fp, ensure_ascii=False, indent=4)
+
+        if(item['type']=='content'):
+            print(item)
+            cprint(item['url'],'yellow',attrs=['dark'])
         return item
