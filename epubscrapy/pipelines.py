@@ -42,6 +42,25 @@ class EpubscrapyPipeline:
             with open(file_path, 'w') as fp:
                 json.dump(dict(item),fp,ensure_ascii = False, indent=4)
                 fp.flush()
-        return 0
-
+            #Update the workinglist
+            removeTask(wId,fId)
         return item
+
+
+
+def removeTask(wId, fId_to_remove):
+    file_path = r'working/' + wId + '/workingList'
+    # 读取现有的字典列表
+    try:
+        with open(file_path, 'r', encoding='utf-8') as fp:
+            data = json.load(fp)
+    except FileNotFoundError:
+        data = []
+
+    # 找到并删除包含特定 fId 的元素
+    data = [entry for entry in data if entry.get('fId') != fId_to_remove]
+
+    # 将更新后的列表写回文件
+    with open(file_path, 'w', encoding='utf-8') as fp:
+        json.dump(data, fp, ensure_ascii=False, indent=4)
+

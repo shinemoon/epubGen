@@ -31,7 +31,7 @@ class EpubgenSpider(CrawlSpider):
 
     # Set the log level to INFO for this specific spider
     common_settings = {
-            "LOG_LEVEL": "INFO",
+            "LOG_LEVEL": "ERROR",
             "LOG_FILE_APPEND": False,
             "ITEM_PIPELINES" : {
                 'epubscrapy.pipelines.EpubscrapyPipeline': 300,
@@ -129,6 +129,12 @@ class EpubgenSpider(CrawlSpider):
         with open(r'working/'+wId+'/bookinfo', 'w', encoding='utf-8') as fp:
             json.dump(binfo,fp,ensure_ascii = False)
             fp.flush()
+
+        file_path = r'working/'+wId+'/workingList'
+        data = []
+        # 清空List
+        with open(file_path, 'w', encoding='utf-8') as fp:
+            json.dump(data, fp, ensure_ascii=False, indent=4)
 
         # Iterate over each link and extract href and title
         for index,link in enumerate(links):
