@@ -152,12 +152,15 @@ class EpubgenSpider(CrawlSpider):
 
         # Define how to parse the response
         wId = response.meta.get('wId')
+        fId = response.meta.get('fId')
         #print(response.css('#booktxt p::text').getall())
         curChar = chapter()
         curChar['type']='content'
         curChar['url']=response.url
         curChar['wId']=wId
-        print(curChar)
+        curChar['fId']=fId
+        curChar['title']=response.css(self.cfg['titleKey']).get()
+        curChar['content']=response.css(self.cfg['contentKey']).get()
         if USEPLAYWRIGHT:
             if self.page and not self.page.is_closed():
                 await self.page.close()
@@ -202,7 +205,8 @@ class EpubgenSpider(CrawlSpider):
             cprint("获取内容",'blue',attrs=['dark'])
             # start url已经获取完毕(__init__)
             for index,url in enumerate(self.start_urls):
-                extra_meta = {'wId': self.wIdList[index]}
+                fId="%05d_%s"%(index,hashlib.sha1((self.cfg['url']+url).encode("UTF-8")).hexdigest()[:10])
+                extra_meta = {'wId': self.wIdList[index], 'index':index, 'fId':fId}
                 meta = {**self.custom_meta, **extra_meta}
                 # GET request
                 self.logger.info(f"Start to Request! {url}")

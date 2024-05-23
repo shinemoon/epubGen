@@ -2,12 +2,15 @@
 from scrapy.crawler import CrawlerProcess
 from epubscrapy.spiders.epubgen import EpubgenSpider
 from scrapy.utils.project import get_project_settings
+from multiprocessing import Process
 
 import subprocess, os, glob
 
 
 import fire
 import os
+import pdb
+
 
 curCfg= {
         #Site Info
@@ -23,21 +26,21 @@ curCfg= {
         "indexHrefKey":"::attr(href)",
         "indexTitleKey":"dd::text",
         #Content Parser
-        "contentKey":"#content",
+        "contentKey":"#booktxt",
         "bookName":"#info h1::text",
         "authorName":"#info p:nth-child(2) a::text",
-        "titleKey":".bookname h1",
+        "titleKey":"h1.bookname::text",
         "fetchDelay":2,
         "fmimg":"#fmimg img::attr(src)",
         "fmtype":"refine",
-        "excludeKeys":["script","#content_tip","p"],
+        #        "excludeKeys":["script","#content_tip","p"],
+        "excludeKeys":["script"],
         #Mail
         "recmail":"shinemoon@foxmail.com",
         }
 
 
-
-def getBookIndex(bkUrl=""):
+def runCrawl(bkUrl="", mode='index'):
     """
     To Scan one book's index, to save it into json file, and return summary of result.
 
@@ -47,8 +50,6 @@ def getBookIndex(bkUrl=""):
     Returns:
         Array: book list info.
     """
-    import pdb
-
     if bkUrl=="":
         bkUrl = "https://www.kuaishu5.com/b265521/"
 
@@ -64,18 +65,46 @@ def getBookIndex(bkUrl=""):
     process = CrawlerProcess(settings)
    
 
-
     # Add your spider to the process
     # 获取目录列表
-    process.crawl(EpubgenSpider, start_urls=[bkUrl], conf=curCfg, mode='content')
+    process.crawl(EpubgenSpider, start_urls=[bkUrl], conf=curCfg, mode=mode)
     process.start(stop_after_crawl=True)
+    print(f"{mode} MODE DONE")
 
-    # 按照任务列表获取内容
-    # 获取目录列表
-    #process.crawl(EpubgenSpider, start_urls=[bkUrl], conf=curCfg, mode='content')
-    #process.start(stop_after_crawl=True)
+def run_spider_in_process(bkUrl, mode):
+    p = Process(target=runCrawl, args=(bkUrl, mode))
+    p.start()
+    p.join()
 
+def main(startUrl='', mode='all'):
+    """书籍抓取生成工具
 
+    用于生成书籍的工具脚本
+
+    Usage: 
+        startUrl : str
+            对应书籍的目录页
+        mode : str  
+            任务类型
+            - index: 生成目录列表
+            - content: 抓取章节内容
+            - gen: 生成电子书
+            - all: 一键生成 
+
+    Args:
+        startUrl: 对应书籍的目录页
+        mode: 任务模式
+
+    """
+    WMODE={'all':[1,1,1], 'index':[1,0,0], 'content':[0,1,0], 'gen':[0,0,1]}
+    wow = WMODE[mode]
+
+    #Start of Code
+    if(wow[0]):
+        run_spider_in_process(startUrl,'index')
+
+    if(wow[1]):
+        run_spider_in_process(startUrl,'content')
 
 
 
@@ -89,4 +118,4 @@ def log_stats(process):
 # Start/Resume to fetch content
 
 if __name__=='__main__':
-    fire.Fire(getBookIndex)
+    fire.Fire(main)
