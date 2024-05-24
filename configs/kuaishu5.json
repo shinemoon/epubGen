@@ -1,0 +1,20 @@
+{
+        "name":"快书网",
+        "url":"https://www.kuaishu5.com",
+        "domain":["kuaishu5.com"],
+        "defaultUrl":["https://www.kuaishu5.com/b252247/"],
+        "cookies":{"t":"64d056276329451626481e87d09e8340","r":"4079"},
+        "pageKey":".index-container-btn",
+        "indexKey":"#list #content_1 a",
+        "indexHrefKey":"::attr(href)",
+        "indexTitleKey":"dd::text",
+        "contentKey":"#booktxt",
+        "bookName":"#info h1::text",
+        "authorName":"#info p:nth-child(2) a::text",
+        "titleKey":"h1.bookname::text",
+        "fetchDelay":2,
+        "fmimg":"#fmimg img::attr(src)",
+        "fmtype":"refine",
+        "excludeKeys":["script"],
+        "recmail":"shinemoon@foxmail.com"
+}

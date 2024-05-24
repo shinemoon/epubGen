@@ -27,7 +27,7 @@ def genHtml(fpath,args):
     indres = "<html lang='zh'><head><style> \
             <meta charset='utf-8'>"
 
-    if(args.toc):
+    if(args['toc']):
         indres = indres + "</style></head><body><div id='index-page' style='display:block!important'><h1>全书目录</h1><ul>"
     else:
         indres = indres + "</style></head><body><div id='index-page' style='display:none!important'><h1>全书目录</h1><ul>"

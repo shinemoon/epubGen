@@ -3,44 +3,19 @@ from scrapy.crawler import CrawlerProcess
 from epubscrapy.spiders.epubgen import EpubgenSpider
 from scrapy.utils.project import get_project_settings
 from multiprocessing import Process
-
 import subprocess, os, glob
-
-
+import hashlib, subprocess
+from utils import select_and_read_config
+from termcolor import colored, cprint
 import fire
 import os
 import pdb
 
 
-curCfg= {
-        #Site Info
-        "name":"快书网",
-        "url":"https://www.kuaishu5.com",
-        "domain":["kuaishu5.com"],
-        "defaultUrl":["https://www.kuaishu5.com/b252247/"],
-        "cookies":{'t':'64d056276329451626481e87d09e8340','r':'4079'},
-        "useplaywright":True,
-        #Index Parser
-        "pageKey":".index-container-btn",
-        "indexKey":"#list #content_1 a",
-        "indexHrefKey":"::attr(href)",
-        "indexTitleKey":"dd::text",
-        #Content Parser
-        "contentKey":"#booktxt",
-        "bookName":"#info h1::text",
-        "authorName":"#info p:nth-child(2) a::text",
-        "titleKey":"h1.bookname::text",
-        "fetchDelay":2,
-        "fmimg":"#fmimg img::attr(src)",
-        "fmtype":"refine",
-        #        "excludeKeys":["script","#content_tip","p"],
-        "excludeKeys":["script"],
-        #Mail
-        "recmail":"shinemoon@foxmail.com",
-        }
+from genepub import genEpubfromHtml
 
 
-def runCrawl(bkUrl="", mode='index'):
+def runCrawl(bkUrl="", mode='index', cfg=None):
     """
     To Scan one book's index, to save it into json file, and return summary of result.
 
@@ -50,8 +25,6 @@ def runCrawl(bkUrl="", mode='index'):
     Returns:
         Array: book list info.
     """
-    if bkUrl=="":
-        bkUrl = "https://www.kuaishu5.com/b265521/"
 
     # 设置 scrapy.cfg 文件路径
     # 设置 Scrapy 项目的配置文件路径
@@ -67,12 +40,12 @@ def runCrawl(bkUrl="", mode='index'):
 
     # Add your spider to the process
     # 获取目录列表
-    process.crawl(EpubgenSpider, start_urls=[bkUrl], conf=curCfg, mode=mode)
+    process.crawl(EpubgenSpider, start_urls=[bkUrl], conf=cfg, mode=mode)
     process.start(stop_after_crawl=True)
     print(f"{mode} MODE DONE")
 
-def run_spider_in_process(bkUrl, mode):
-    p = Process(target=runCrawl, args=(bkUrl, mode))
+def run_spider_in_process(bkUrl, mode, cfg):
+    p = Process(target=runCrawl, args=(bkUrl, mode, cfg))
     p.start()
     p.join()
 
@@ -96,15 +69,50 @@ def main(startUrl='', mode='all'):
         mode: 任务模式
 
     """
-    WMODE={'all':[1,1,1], 'index':[1,0,0], 'content':[0,1,0], 'gen':[0,0,1]}
+    
+    # 读取配置文件
+    configs_dir = './configs'
+    curCfg = select_and_read_config(configs_dir)
+    #print(f"选定的文件内容: {selected_data}")
+
+    startUrl  = str(input("请输入书籍目录页: "))
+
+    if(startUrl==''):
+        startUrl = "https://www.kuaishu5.com/b265521/"
+    wId = hashlib.sha1(startUrl.encode("UTF-8")).hexdigest()[:10]
+
+    WMODE={'all':[1,1,1,0], 'index':[1,0,0,0], 'content':[0,1,0,0], 'gen':[0,0,1,0], 'clean':[0,0,0,1]}
     wow = WMODE[mode]
 
     #Start of Code
     if(wow[0]):
-        run_spider_in_process(startUrl,'index')
+        cprint(f"抓取索引目录","blue")
+        run_spider_in_process(startUrl,'index', curCfg)
 
     if(wow[1]):
-        run_spider_in_process(startUrl,'content')
+        cprint(f"抓取正文","blue")
+        run_spider_in_process(startUrl,'content', curCfg)
+
+
+    if(wow[2]):
+        cprint(f"生成书籍","yellow")
+        if(genEpubfromHtml('working/'+wId, curCfg, {'toc':True,'mail':False})==0):
+            pass
+            # to check if mail needed:
+            #if(args.mail):
+#                cprint("生成完毕，发送邮件!",'green',attrs=['bold'])
+#                # Reconstruct the sendmail bash
+#                mailcmd = "./send-mail.sh %s %s %s"%(siteConfigs['recmail'],'working/'+wId+'/'+binfo['name']+'.epub',binfo['name'])
+#                # excute the sendmail cmd
+#                cprint(mailcmd,'green',attrs=['dark'])
+#                subprocess.run(mailcmd,shell=True, check=True)
+#            else:
+#                cprint("生成完毕！",'green',attrs=['bold'])
+
+    if(wow[3]):
+        #subprocess.run("rm -rf working/%s"%(wId),shell=True, check=True)
+        subprocess.run("rm -rf working/*",shell=True, check=True)
+        cprint(f"清理工作目录","red")
 
 
 

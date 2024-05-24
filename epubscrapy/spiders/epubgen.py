@@ -10,6 +10,8 @@ from utils import detectRealUrl,read_working_list
 from url_normalize import url_normalize
 
 from epubscrapy.items import EpubscrapyItem as chapter
+from scrapy import signals
+from scrapy.signalmanager import dispatcher
 
 class EpubgenSpider(CrawlSpider):
     name="epubGenSpider"
@@ -17,6 +19,9 @@ class EpubgenSpider(CrawlSpider):
     cookie_dict={}
     mode='index'
     wIdList=[]
+
+    indexCnt=0
+    chaptCnt=0
 
     page = None
 
@@ -80,6 +85,10 @@ class EpubgenSpider(CrawlSpider):
     
     def __init__(self, start_urls=None, conf=None, mode='index', *args, **kwargs):
         super(EpubgenSpider, self).__init__(*args, **kwargs)
+        dispatcher.connect(self.spider_closed, signals.spider_closed)
+        self.indexCnt= 0
+        self.chaptCnt= 0
+
         if conf is not None:
             self.initwConf(conf, mode=mode)
         # To Override Start Url
@@ -90,7 +99,7 @@ class EpubgenSpider(CrawlSpider):
                 # To parse and get content list
                 self.start_urls = []
                 for url in start_urls:
-                    wId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10];
+                    wId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10]
                     data = read_working_list(wId)
                     # 提取所有的url
                     self.start_urls = self.start_urls + [item['url'] for item in data]
@@ -140,6 +149,7 @@ class EpubgenSpider(CrawlSpider):
         for index,link in enumerate(links):
             url=response.urljoin(link.css(self.cfg['indexHrefKey']).get())
             title = link.css(self.cfg['indexTitleKey']).get()
+            self.indexCnt +=1
             yield {
                 'type': 'index',
                 'url': url,
@@ -170,6 +180,7 @@ class EpubgenSpider(CrawlSpider):
         if USEPLAYWRIGHT:
             if self.page and not self.page.is_closed():
                 await self.page.close()
+        self.chaptCnt +=1
         return curChar
 
 
@@ -193,7 +204,7 @@ class EpubgenSpider(CrawlSpider):
         if(self.mode=='index'):
             cprint("获取目录",'blue')
             for url in self.start_urls:
-                wId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10];
+                wId = hashlib.sha1(url.encode("UTF-8")).hexdigest()[:10]
                 cprint("创建工作目录",'blue',attrs=['dark'])
                 subprocess.run("mkdir -p working/"+wId+"/dumps", shell=True, check=True)
                 extra_meta = {'wId': wId}
@@ -222,3 +233,9 @@ class EpubgenSpider(CrawlSpider):
                         meta = meta,
                         callback=self.parse_book,
                         )
+
+    def spider_closed(self, spider):
+        # 统计打印
+        cprint(f"爬虫 {spider.name} 完成", "blue")
+        cprint(f"总共抓取到 {self.indexCnt} 个 索引页面","blue")
+        cprint(f"总共抓取到 {self.chaptCnt} 个 正文页面","blue")
