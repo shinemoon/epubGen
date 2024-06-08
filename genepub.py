@@ -9,6 +9,7 @@ from termcolor import colored, cprint
 import random
 
 from PIL import Image
+from bs4 import BeautifulSoup
 
 
 def sortHtmlfromJson(fpath):
@@ -18,6 +19,65 @@ def sortHtmlfromJson(fpath):
     res = "<h1 style='font-size:1.1em'>" + ccontent['title']+ "</h1>" 
     res = res + "<div>" + ccontent['content']+ "</div>" 
     return [res, ccontent]
+
+def sortTxtfromJson(fpath):
+    with open(fpath) as f:
+        ccontent = json.load(f)
+
+    res = ccontent['title']+ "\n"
+
+    # 使用BeautifulSoup解析HTML
+    soup = BeautifulSoup(ccontent['content'], 'lxml')
+    
+    # 定义一个函数来处理文本换行
+    def handle_line_breaks(tag):
+        if tag.name == 'br':
+            return '\n'
+        elif tag.name == 'p':
+            return tag.text + '\n\n'  # 段落后面添加两个换行符
+        return ''
+    
+    # 遍历所有标签，替换为适当的文本
+    for tag in soup.find_all(True):
+        replacement = handle_line_breaks(tag)
+        if replacement:
+            tag.replace_with(replacement)
+    
+    # 获取纯文本内容
+    text_content = soup.get_text()
+    
+
+    res = res + text_content
+
+    return [res, ccontent]
+
+
+
+def genTxt(fpath,args):
+    cfg={}
+    with open(fpath+'/../bookinfo') as f:
+        cfg = json.load(f)
+
+    with open(r'%s/novel.txt'%(fpath), 'w') as fp:
+        fp.write("")
+        fp.flush()
+    # Sorting all existed files
+    for c in [_ for _ in sorted(os.listdir(fpath)) if _.endswith('json') ]:
+        res = sortTxtfromJson(fpath+c)
+        ### Folder style
+        ## Write single pages
+
+        #!! Quite Wierd Workaround! ISO-8859-1 needed , otherwise ebook-convert will have issue when decoding the linked html page...
+
+        #singlec = "<html lang='zh'><head> <meta charset='utf-8'> <style></style></head><body>"
+        singlec = ""
+        singlec = singlec+res[0]
+        with open(r'%s/novel.txt'%(fpath), 'a') as fp:
+            fp.write(singlec)
+            fp.flush()
+    return 0
+
+
 
 def genHtml(fpath,args):
     cfg={}
@@ -111,6 +171,9 @@ def genCover(fpath,cfg, binfo):
 def genEpubfromHtml(fpath,cfg,args):
     # Gen Html
     genHtml(fpath+'/dumps/',args)
+
+    # Gen Txt
+    genTxt(fpath+'/dumps/',args)
 
 
     # Got book info
